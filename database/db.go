@@ -16,8 +16,11 @@ type DB struct {
 	db *sql.DB
 }
 
+// DataBase for
+var DataBase DB
+
 // SetUp for setting up DB
-func SetUp() DB {
+func SetUp() {
 	log.Println("Opening DB...")
 	db, err := sql.Open("sqlite3", "./database.db")
 	errorhandle.Check(err)
@@ -92,7 +95,9 @@ func SetUp() DB {
 	errorhandle.Check(err)
 	log.Println("Sessions table created")
 
-	return DB{db}
+	DataBase = DB{db}
+
+	// return DB{db}
 }
 
 // CreateUser to create a new user
@@ -220,4 +225,30 @@ func (DB *DB) UpdateComment(updatedComment models.Comment) {
 	)
 	errorhandle.Check(err)
 	log.Printf("Updated comment with id %d\n", updatedComment.CommentID)
+}
+
+// EmailExists checks if email is already in database
+func (DB *DB) EmailExists(email string) bool {
+	emails, err := DB.db.Query(`
+		SELECT 1
+		FROM users
+		WHERE email = ?
+	`, email)
+	defer emails.Close()
+
+	errorhandle.Check(err)
+	return emails.Next()
+}
+
+// UsernameExists checks if email is already in database
+func (DB *DB) UsernameExists(username string) bool {
+	usernames, err := DB.db.Query(`
+		SELECT 1
+		FROM users
+		WHERE username = ?
+	`, username)
+	defer usernames.Close()
+
+	errorhandle.Check(err)
+	return usernames.Next()
 }
