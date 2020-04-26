@@ -50,8 +50,8 @@ func GetUser(w http.ResponseWriter, r *http.Request) models.User {
 		return user
 	}
 
-	session.TimeCreated = time.Now()
-	database.DataBase.UpdateSession(session)
+	// session.TimeCreated = time.Now()
+	// database.DataBase.UpdateSession(session)
 
 	c.MaxAge = 24 * 60 * 60
 	http.SetCookie(w, c)
@@ -59,8 +59,8 @@ func GetUser(w http.ResponseWriter, r *http.Request) models.User {
 	return user
 }
 
-// AlreadyLoggedIn checks if user is logged in
-func AlreadyLoggedIn(w http.ResponseWriter, r *http.Request) bool {
+// IsLoggedIn checks if user is logged in
+func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	user := GetUser(w, r)
 	return user.UserID != 0
 }

@@ -1,8 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
 	"regexp"
+	"time"
 
 	"../database"
 	"../errorhandle"
@@ -14,7 +16,7 @@ import (
 
 // Index route
 func Index(w http.ResponseWriter, r *http.Request) {
-	if sessions.AlreadyLoggedIn(w, r) {
+	if sessions.IsLoggedIn(w, r) {
 		user := sessions.GetUser(w, r)
 		w.Write([]byte("Welcome " + user.FirstName + " " + user.LastName))
 	} else {
@@ -27,7 +29,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		var newUser models.User
 		regex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-		r.ParseForm()
 
 		newUser.Email = r.FormValue("email")
 		newUser.Username = r.FormValue("username")
@@ -90,7 +91,6 @@ func Register(w http.ResponseWriter, r *http.Request) {
 func Login(w http.ResponseWriter, r *http.Request) {
 	if r.Method == http.MethodPost {
 		regex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
-		r.ParseForm()
 
 		username := r.FormValue("username")
 		password := r.FormValue("password")
@@ -133,4 +133,74 @@ func Login(w http.ResponseWriter, r *http.Request) {
 			<button type="submit">Submit</button>
 		</form>`))
 	}
+}
+
+// CreatePost route
+func CreatePost(w http.ResponseWriter, r *http.Request) {
+	if !sessions.IsLoggedIn(w, r) {
+		http.Redirect(w, r, "/login", http.StatusSeeOther)
+	}
+
+	if r.Method == http.MethodPost {
+		regex := regexp.MustCompile(`^.*\.(jpg|JPG|jpeg|JPEG|gif|GIF|png|PNG|svg|SVG)$`)
+		catregex := regexp.MustCompile(`^(Gaming|Technology|Programming|Books|Music)$`)
+
+		mf, fh, err := r.FormFile("image")
+		errorhandle.Check(err)
+		defer mf.Close()
+
+		category := r.FormValue("category")
+		title := r.FormValue("title")
+		content := r.FormValue("content")
+
+		if category == "" {
+			w.Write([]byte("Category must not be empty."))
+			return
+		} else if !catregex.MatchString(category) {
+			w.Write([]byte("Invalid category."))
+			return
+		} else if title == "" {
+			w.Write([]byte("Title must not be empty."))
+			return
+		} else if content == "" {
+			w.Write([]byte("Content must not be empty."))
+			return
+		} else if fh.Size > 20000000 {
+			w.Write([]byte("File too large. Please limit size to 20MB."))
+			return
+		} else if !regex.MatchString(fh.Filename) {
+			w.Write([]byte("Invalid file type. Please upload jpg, jpeg, png, gif, svg"))
+			return
+		}
+
+		bytes := make([]byte, fh.Size)
+		mf.Read(bytes)
+
+		newPost := models.Post{
+			UserID:      sessions.GetUser(w, r).UserID,
+			Category:    category,
+			Title:       title,
+			Content:     content,
+			Image:       bytes,
+			TimeCreated: time.Now(),
+		}
+
+		database.DataBase.CreatePost(&newPost)
+
+		http.Redirect(w, r, fmt.Sprintf("/posts/%d", newPost.PostID), http.StatusCreated)
+
+	} else {
+		w.Header().Set("Content-Type", "text/html")
+		w.Write([]byte(`<form method="POST" enctype="multipart/form-data">
+			<input type="text" name="category" placeholder="category" required><br>
+			<input type="text" name="title" placeholder="title" required><br>
+			<input type="text" name="content" placeholder="content" required><br>
+			<input type="file" name="image" accept=".jpg,.JPG,.png,.PNG,.gif,.GIF,.svg,.SVG"><br>
+			<button type="submit">Submit</button>
+		</form>`))
+	}
+}
+
+func GetPost(w http.ResponseWriter, r *http.Request) {
+	fmt.Println("check")
 }
