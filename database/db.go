@@ -29,7 +29,8 @@ func SetUp() {
 	createUserTableSQL := `CREATE TABLE IF NOT EXISTS users (
 		"userid"    integer NOT NULL PRIMARY KEY AUTOINCREMENT,
 		"username"  TEXT NOT NULL UNIQUE,
-		"hash"      TEXT NOT NULL,
+		"hash"      BLOB NOT NULL,
+		"salt"      TEXT NOT NULL,
 		"email"     TEXT NOT NULL UNIQUE,
 		"firstname" TEXT NOT NULL,
 		"lastname"  TEXT NOT NULL		
@@ -102,15 +103,17 @@ func SetUp() {
 
 // CreateUser to create a new user
 func (DB *DB) CreateUser(newUser *models.User) {
+	// TODO change for the new implementation
 	log.Println("Creating new user...")
 	createUser, err := DB.db.Prepare(`
 		INSERT INTO users
-		(hash, firstname, lastname, username, email)
-		VALUES (?, ?, ?, ?, ?);
+		(hash, salt, firstname, lastname, username, email)
+		VALUES (?, ?, ?, ?, ?, ?);
 	`)
 	errorhandle.Check(err)
 	res, err := createUser.Exec(
 		newUser.Hash,
+		newUser.Salt,
 		newUser.FirstName,
 		newUser.LastName,
 		newUser.Username,
@@ -229,26 +232,122 @@ func (DB *DB) UpdateComment(updatedComment models.Comment) {
 
 // EmailExists checks if email is already in database
 func (DB *DB) EmailExists(email string) bool {
-	emails, err := DB.db.Query(`
+	row, err := DB.db.Query(`
 		SELECT 1
 		FROM users
 		WHERE email = ?
 	`, email)
-	defer emails.Close()
+	defer row.Close()
 
 	errorhandle.Check(err)
-	return emails.Next()
+	return row.Next()
 }
 
 // UsernameExists checks if email is already in database
 func (DB *DB) UsernameExists(username string) bool {
-	usernames, err := DB.db.Query(`
+	row, err := DB.db.Query(`
 		SELECT 1
 		FROM users
 		WHERE username = ?
 	`, username)
-	defer usernames.Close()
+	defer row.Close()
 
 	errorhandle.Check(err)
-	return usernames.Next()
+	return row.Next()
+}
+
+// GetSession looks up session by sessionID
+func (DB *DB) GetSession(sessionID string) models.Session {
+	row, err := DB.db.Query(`
+		SELECT *
+		FROM sessions
+		WHERE sessionid = ?
+	`, sessionID)
+	defer row.Close()
+
+	errorhandle.Check(err)
+
+	var session models.Session
+
+	for row.Next() {
+		row.Scan(&session.SessionID, &session.UserID, &session.TimeCreated)
+	}
+
+	return session
+}
+
+// UpdateSession updates session's created time
+func (DB *DB) UpdateSession(updatedSession models.Session) {
+	log.Printf("Updating session with id %v...\n", updatedSession.SessionID)
+	updateSession, err := DB.db.Prepare(`
+		UPDATE sessions
+		SET timecreated = ?
+		WHERE sessionid = ?;
+	`)
+
+	errorhandle.Check(err)
+	_, err = updateSession.Exec(
+		updatedSession.TimeCreated,
+		updatedSession.SessionID,
+	)
+	errorhandle.Check(err)
+	log.Printf("Updated session with id %v\n", updatedSession.SessionID)
+}
+
+// GetUserByID gets the user from userid
+func (DB *DB) GetUserByID(userID int) models.User {
+	row, err := DB.db.Query(`
+		SELECT *
+		FROM users
+		WHERE userid = ?
+	`, userID)
+	defer row.Close()
+
+	errorhandle.Check(err)
+
+	var user models.User
+
+	for row.Next() {
+		row.Scan(&user.UserID, &user.Username, &user.Hash, &user.Salt, &user.Email, &user.FirstName, &user.LastName)
+	}
+
+	return user
+}
+
+// GetUserByEmail gets the user from userid
+func (DB *DB) GetUserByEmail(email string) models.User {
+	row, err := DB.db.Query(`
+		SELECT *
+		FROM users
+		WHERE email = ?
+	`, email)
+	defer row.Close()
+
+	errorhandle.Check(err)
+
+	var user models.User
+	for row.Next() {
+		row.Scan(&user.UserID, &user.Username, &user.Hash, &user.Salt, &user.Email, &user.FirstName, &user.LastName)
+	}
+
+	return user
+}
+
+// GetUserByUsername gets the user from userid
+func (DB *DB) GetUserByUsername(username string) models.User {
+	row, err := DB.db.Query(`
+		SELECT *
+		FROM users
+		WHERE username = ?
+	`, username)
+	defer row.Close()
+
+	errorhandle.Check(err)
+
+	var user models.User
+	for row.Next() {
+		row.Scan(&user.UserID, &user.Username, &user.Hash, &user.Salt, &user.Email, &user.FirstName, &user.LastName)
+	}
+
+	return user
 }

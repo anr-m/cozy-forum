@@ -3,7 +3,8 @@ package models
 // User type for DB
 type User struct {
 	UserID    int
-	Hash      string
+	Hash      []byte
+	Salt      string
 	FirstName string
 	LastName  string
 	Email     string
