@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"time"
 
-	"../database"
+	"../db"
 	"../errorhandle"
 	"../models"
 	uuid "github.com/satori/go.uuid"
@@ -27,7 +27,7 @@ func CreateSession(userID int, w http.ResponseWriter) {
 		TimeCreated: time.Now(),
 	}
 
-	database.DataBase.CreateSession(session)
+	db.CreateSession(session)
 	http.SetCookie(w, c)
 }
 
@@ -40,18 +40,18 @@ func GetUser(w http.ResponseWriter, r *http.Request) models.User {
 		return user
 	}
 
-	session := database.DataBase.GetSession(c.Value)
+	session := db.GetSession(c.Value)
 	if session.UserID == 0 {
 		return user
 	}
 
-	user = database.DataBase.GetUserByID(session.UserID)
+	user = db.GetUserByID(session.UserID)
 	if user.UserID == 0 {
 		return user
 	}
 
 	// session.TimeCreated = time.Now()
-	// database.DataBase.UpdateSession(session)
+	// db.UpdateSession(session)
 
 	c.MaxAge = 24 * 60 * 60
 	http.SetCookie(w, c)

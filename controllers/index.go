@@ -3,10 +3,12 @@ package controllers
 import (
 	"fmt"
 	"net/http"
+	"path"
 	"regexp"
+	"strconv"
 	"time"
 
-	"../database"
+	"../db"
 	"../errorhandle"
 	"../models"
 	"../sessions"
@@ -42,13 +44,13 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		} else if !regex.MatchString(newUser.Email) {
 			w.Write([]byte("Enter valid email"))
 			return
-		} else if database.DataBase.EmailExists(newUser.Email) {
+		} else if db.EmailExists(newUser.Email) {
 			w.Write([]byte("Email exists"))
 			return
 		} else if newUser.Username == "" {
 			w.Write([]byte("Username must not be empty"))
 			return
-		} else if database.DataBase.UsernameExists(newUser.Username) {
+		} else if db.UsernameExists(newUser.Username) {
 			w.Write([]byte("Username exists"))
 			return
 		} else if len(password) < 8 {
@@ -70,7 +72,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		newUser.Hash = hash
 		newUser.Salt = salt.String()
 
-		database.DataBase.CreateUser(&newUser)
+		db.CreateUser(&newUser)
 		sessions.CreateSession(newUser.UserID, w)
 
 		w.Write([]byte("Successfully registered"))
@@ -104,20 +106,20 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		}
 
 		if regex.MatchString(username) {
-			if !database.DataBase.EmailExists(username) {
+			if !db.EmailExists(username) {
 				w.Write([]byte("Invalid email"))
 				return
 			}
-			user := database.DataBase.GetUserByEmail(username)
+			user := db.GetUserByEmail(username)
 			err := bcrypt.CompareHashAndPassword(user.Hash, []byte(password+user.Salt))
 			errorhandle.Check(err)
 			sessions.CreateSession(user.UserID, w)
 		} else {
-			if !database.DataBase.UsernameExists(username) {
+			if !db.UsernameExists(username) {
 				w.Write([]byte("Invalid username"))
 				return
 			}
-			user := database.DataBase.GetUserByUsername(username)
+			user := db.GetUserByUsername(username)
 			err := bcrypt.CompareHashAndPassword(user.Hash, []byte(password+user.Salt))
 			errorhandle.Check(err)
 			sessions.CreateSession(user.UserID, w)
@@ -143,11 +145,12 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 
 	if r.Method == http.MethodPost {
 		regex := regexp.MustCompile(`^.*\.(jpg|JPG|jpeg|JPEG|gif|GIF|png|PNG|svg|SVG)$`)
-		catregex := regexp.MustCompile(`^(Gaming|Technology|Programming|Books|Music)$`)
+		catregex := regexp.MustCompile(`^(gaming|technology|programming|books|music)$`)
 
-		mf, fh, err := r.FormFile("image")
-		errorhandle.Check(err)
-		defer mf.Close()
+		mf, fh, _ := r.FormFile("image")
+		if fh != nil {
+			defer mf.Close()
+		}
 
 		category := r.FormValue("category")
 		title := r.FormValue("title")
@@ -165,16 +168,19 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		} else if content == "" {
 			w.Write([]byte("Content must not be empty."))
 			return
-		} else if fh.Size > 20000000 {
+		} else if fh != nil && fh.Size > 20000000 {
 			w.Write([]byte("File too large. Please limit size to 20MB."))
 			return
-		} else if !regex.MatchString(fh.Filename) {
+		} else if fh != nil && !regex.MatchString(fh.Filename) {
 			w.Write([]byte("Invalid file type. Please upload jpg, jpeg, png, gif, svg"))
 			return
 		}
 
-		bytes := make([]byte, fh.Size)
-		mf.Read(bytes)
+		var bytes []byte
+		if fh != nil {
+			bytes = make([]byte, fh.Size)
+			mf.Read(bytes)
+		}
 
 		newPost := models.Post{
 			UserID:      sessions.GetUser(w, r).UserID,
@@ -185,11 +191,11 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			TimeCreated: time.Now(),
 		}
 
-		database.DataBase.CreatePost(&newPost)
+		db.CreatePost(&newPost)
 
-		http.Redirect(w, r, fmt.Sprintf("/posts/%d", newPost.PostID), http.StatusCreated)
+		http.Redirect(w, r, fmt.Sprintf("/posts/id/%d", newPost.PostID), http.StatusSeeOther)
 
-	} else {
+	} else if r.Method == http.MethodGet {
 		w.Header().Set("Content-Type", "text/html")
 		w.Write([]byte(`<form method="POST" enctype="multipart/form-data">
 			<input type="text" name="category" placeholder="category" required><br>
@@ -201,6 +207,72 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
-func GetPost(w http.ResponseWriter, r *http.Request) {
-	fmt.Println("check")
+func GetPostByID(w http.ResponseWriter, r *http.Request) {
+	dir, endpoint := path.Split(r.URL.Path)
+	postid, _ := strconv.Atoi(endpoint)
+
+	if dir != "/posts/id/" || postid == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404 Not Found"))
+		return
+	}
+
+	post := db.GetPostByID(postid)
+
+	if post.PostID != postid {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("404 Not Found"))
+		return
+	}
+
+	fmt.Fprintln(w, post)
+}
+
+func CreateComment(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		w.Write([]byte("Invalid method"))
+		return
+	}
+
+	if !sessions.IsLoggedIn(w, r) {
+		w.Write([]byte("Not logged in"))
+		return
+	}
+
+	dir, endpoint := path.Split(r.URL.Path)
+	postid, _ := strconv.Atoi(endpoint)
+
+	if dir != "/comment/" || postid == 0 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Invalid path"))
+		return
+	}
+
+	text := r.FormValue("text")
+	user := sessions.GetUser(w, r)
+
+	if text == "" {
+		w.Write([]byte("Invalid comment"))
+		return
+	}
+
+	newComment := models.Comment{
+		PostID:      postid,
+		UserID:      user.UserID,
+		Text:        text,
+		TimeCreated: time.Now(),
+	}
+
+	db.CreateComment(&newComment)
+
+	http.Redirect(w, r, fmt.Sprintf("/posts/id/%d", newComment.PostID), http.StatusSeeOther)
+}
+
+func GetPosts(w http.ResponseWriter, r *http.Request) {
+	posts := db.GetPosts()
+	fmt.Fprintln(w, posts)
+}
+
+func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
+
 }

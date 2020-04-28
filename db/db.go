@@ -1,4 +1,4 @@
-package database
+package db
 
 import (
 	"database/sql"
@@ -11,29 +11,25 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
-// DB type for DB
-type DB struct {
-	db *sql.DB
-}
-
-// DataBase for
-var DataBase DB
+// Database file
+var db *sql.DB
 
 // SetUp for setting up DB
 func SetUp() {
+	var err error
 	log.Println("Opening DB...")
-	db, err := sql.Open("sqlite3", "./database.db")
+	db, err = sql.Open("sqlite3", "./database.db")
 	errorhandle.Check(err)
 	log.Println("DB opened")
 
 	createUserTableSQL := `CREATE TABLE IF NOT EXISTS users (
-		"userid"    integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-		"username"  TEXT NOT NULL UNIQUE,
-		"hash"      BLOB NOT NULL,
-		"salt"      TEXT NOT NULL,
-		"email"     TEXT NOT NULL UNIQUE,
-		"firstname" TEXT NOT NULL,
-		"lastname"  TEXT NOT NULL		
+		userid    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		username  TEXT NOT NULL UNIQUE,
+		hash      BLOB NOT NULL,
+		salt      TEXT NOT NULL,
+		email     TEXT NOT NULL UNIQUE,
+		firstname TEXT NOT NULL,
+		lastname  TEXT NOT NULL		
 	);`
 
 	log.Println("Creating users table...")
@@ -41,18 +37,16 @@ func SetUp() {
 	errorhandle.Check(err)
 	_, err = createUserTable.Exec()
 	errorhandle.Check(err)
-	log.Println("User table created")
+	log.Println("Users table created")
 
 	createPostTableSQL := `CREATE TABLE IF NOT EXISTS posts (
-		"postid" integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-		"userid"      integer NOT NULL,
-		"category"    TEXT NOT NULL,
-		"title"       TEXT NOT NULL,
-		"content"     TEXT NOT NULL,
-		"image"       BLOB,
-		"like"        integer NOT NULL DEFAULT 0,
-		"dislike"     integer NOT NULL DEFAULT 0,
-		"timecreated" timestamp NOT NULL,
+		postid      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		userid      INTEGER NOT NULL,
+		category    TEXT NOT NULL,
+		title       TEXT NOT NULL,
+		content     TEXT NOT NULL,
+		image       BLOB,
+		timecreated TIMESTAMP NOT NULL,
 		FOREIGN KEY (userid) REFERENCES users(userid)
 	);`
 
@@ -64,13 +58,11 @@ func SetUp() {
 	log.Println("Posts table created")
 
 	createCommentTableSQL := `CREATE TABLE IF NOT EXISTS comments (
-		"commentid"   integer NOT NULL PRIMARY KEY AUTOINCREMENT,
-		"postid"      integer NOT NULL,
-		"userid"      integer NOT NULL,
-		"text"  	  TEXT NOT NULL,
-		"like"        integer NOT NULL DEFAULT 0,
-		"dislike"     integer NOT NULL DEFAULT 0,
-		"timecreated" timestamp NOT NULL,
+		commentid   INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		postid      INTEGER NOT NULL,
+		userid      INTEGER NOT NULL,
+		text  	    TEXT NOT NULL,
+		timecreated TIMESTAMP NOT NULL,
 		FOREIGN KEY (userid) REFERENCES users(userid),
 		FOREIGN KEY (postid) REFERENCES posts(postid)
 	);`
@@ -83,9 +75,9 @@ func SetUp() {
 	log.Println("Comments table created")
 
 	createSessionTableSQL := `CREATE TABLE IF NOT EXISTS sessions (
-		"sessionid"   string NOT NULL PRIMARY KEY,
-		"userid"      integer NOT NULL,
-		"timecreated" timestamp NOT NULL,
+		sessionid   STRING NOT NULL PRIMARY KEY,
+		userid      INTEGER NOT NULL,
+		timecreated TIMESTAMP NOT NULL,
 		FOREIGN KEY (userid) REFERENCES users(userid)
 	);`
 
@@ -96,16 +88,41 @@ func SetUp() {
 	errorhandle.Check(err)
 	log.Println("Sessions table created")
 
-	DataBase = DB{db}
+	createPostLikesTableSQL := `CREATE TABLE IF NOT EXISTS postlikes (
+		userid   INTEGER NOT NULL,
+		postid   INTEGER NOT NULL,
+		liked    INTEGER NOT NULL,
+		FOREIGN KEY (userid) REFERENCES users(userid),
+		FOREIGN KEY (postid) REFERENCES posts(postid)
+	);`
 
-	// return DB{db}
+	log.Println("Creating postlikes table...")
+	createPostLikesTable, err := db.Prepare(createPostLikesTableSQL)
+	errorhandle.Check(err)
+	_, err = createPostLikesTable.Exec()
+	errorhandle.Check(err)
+	log.Println("Postlikes table created")
+
+	createCommentLikesTableSQL := `CREATE TABLE IF NOT EXISTS commentlikes (
+		userid   INTEGER NOT NULL,
+		postid   INTEGER NOT NULL,
+		liked    INTEGER NOT NULL,
+		FOREIGN KEY (userid) REFERENCES users(userid),
+		FOREIGN KEY (postid) REFERENCES posts(postid)
+	);`
+
+	log.Println("Creating commentlikes table...")
+	createCommentLikesTable, err := db.Prepare(createCommentLikesTableSQL)
+	errorhandle.Check(err)
+	_, err = createCommentLikesTable.Exec()
+	errorhandle.Check(err)
+	log.Println("Commentlikes table created")
 }
 
 // CreateUser to create a new user
-func (DB *DB) CreateUser(newUser *models.User) {
-	// TODO change for the new implementation
+func CreateUser(newUser *models.User) {
 	log.Println("Creating new user...")
-	createUser, err := DB.db.Prepare(`
+	createUser, err := db.Prepare(`
 		INSERT INTO users
 		(hash, salt, firstname, lastname, username, email)
 		VALUES (?, ?, ?, ?, ?, ?);
@@ -126,9 +143,9 @@ func (DB *DB) CreateUser(newUser *models.User) {
 }
 
 // CreatePost to create a new post
-func (DB *DB) CreatePost(newPost *models.Post) {
+func CreatePost(newPost *models.Post) {
 	log.Printf("Creating new post for userid %d...\n", newPost.UserID)
-	createPost, err := DB.db.Prepare(`
+	createPost, err := db.Prepare(`
 		INSERT INTO posts
 		(userid, category, title, content, image, timecreated)
 		VALUES (?, ?, ?, ?, ?, ?);
@@ -150,9 +167,9 @@ func (DB *DB) CreatePost(newPost *models.Post) {
 }
 
 // CreateComment to create a new comment
-func (DB *DB) CreateComment(newComment *models.Comment) {
+func CreateComment(newComment *models.Comment) {
 	log.Printf("Creating new comment from userid %d for post %d...\n", newComment.UserID, newComment.PostID)
-	createComment, err := DB.db.Prepare(`
+	createComment, err := db.Prepare(`
 		INSERT INTO comments
 		(userid, postid, text, timecreated)
 		VALUES (?, ?, ?, ?);
@@ -172,9 +189,9 @@ func (DB *DB) CreateComment(newComment *models.Comment) {
 }
 
 // CreateSession to create a new session
-func (DB *DB) CreateSession(newSession models.Session) {
+func CreateSession(newSession models.Session) {
 	log.Printf("Creating new session for userid %d...\n", newSession.UserID)
-	createSession, err := DB.db.Prepare(`
+	createSession, err := db.Prepare(`
 		INSERT INTO sessions
 		(sessionid, userid, timecreated)
 		VALUES (?, ?, ?);
@@ -191,48 +208,48 @@ func (DB *DB) CreateSession(newSession models.Session) {
 }
 
 // UpdatePost to update a post
-func (DB *DB) UpdatePost(updatedPost models.Post) {
+func UpdatePost(updatedPost models.Post) {
 	// TODO update all values
-	log.Printf("Updating post with id %d...\n", updatedPost.PostID)
-	updatePost, err := DB.db.Prepare(`
-		UPDATE posts
-		SET like = ?, dislike = ?
-		WHERE postid = ?;
-	`)
+	// log.Printf("Updating post with id %d...\n", updatedPost.PostID)
+	// updatePost, err := db.Prepare(`
+	// 	UPDATE posts
+	// 	SET like = ?, dislike = ?
+	// 	WHERE postid = ?;
+	// `)
 
-	errorhandle.Check(err)
-	_, err = updatePost.Exec(
-		updatedPost.Like,
-		updatedPost.Dislike,
-		updatedPost.PostID,
-	)
-	errorhandle.Check(err)
-	log.Printf("Updated post with id %d\n", updatedPost.PostID)
+	// errorhandle.Check(err)
+	// _, err = updatePost.Exec(
+	// 	updatedPost.Like,
+	// 	updatedPost.Dislike,
+	// 	updatedPost.PostID,
+	// )
+	// errorhandle.Check(err)
+	// log.Printf("Updated post with id %d\n", updatedPost.PostID)
 }
 
 // UpdateComment to update a comment
-func (DB *DB) UpdateComment(updatedComment models.Comment) {
+func UpdateComment(updatedComment models.Comment) {
 	// TODO update all values
-	log.Printf("Updating comment with id %d...\n", updatedComment.CommentID)
-	updateComment, err := DB.db.Prepare(`
-		UPDATE comments
-		SET like = ?, dislike = ?
-		WHERE commentid = ?;
-	`)
+	// log.Printf("Updating comment with id %d...\n", updatedComment.CommentID)
+	// updateComment, err := db.Prepare(`
+	// 	UPDATE comments
+	// 	SET like = ?, dislike = ?
+	// 	WHERE commentid = ?;
+	// `)
 
-	errorhandle.Check(err)
-	_, err = updateComment.Exec(
-		updatedComment.Like,
-		updatedComment.Dislike,
-		updatedComment.CommentID,
-	)
-	errorhandle.Check(err)
-	log.Printf("Updated comment with id %d\n", updatedComment.CommentID)
+	// errorhandle.Check(err)
+	// _, err = updateComment.Exec(
+	// 	updatedComment.Like,
+	// 	updatedComment.Dislike,
+	// 	updatedComment.CommentID,
+	// )
+	// errorhandle.Check(err)
+	// log.Printf("Updated comment with id %d\n", updatedComment.CommentID)
 }
 
 // EmailExists checks if email is already in database
-func (DB *DB) EmailExists(email string) bool {
-	row, err := DB.db.Query(`
+func EmailExists(email string) bool {
+	row, err := db.Query(`
 		SELECT 1
 		FROM users
 		WHERE email = ?
@@ -244,8 +261,8 @@ func (DB *DB) EmailExists(email string) bool {
 }
 
 // UsernameExists checks if email is already in database
-func (DB *DB) UsernameExists(username string) bool {
-	row, err := DB.db.Query(`
+func UsernameExists(username string) bool {
+	row, err := db.Query(`
 		SELECT 1
 		FROM users
 		WHERE username = ?
@@ -257,8 +274,8 @@ func (DB *DB) UsernameExists(username string) bool {
 }
 
 // GetSession looks up session by sessionID
-func (DB *DB) GetSession(sessionID string) models.Session {
-	row, err := DB.db.Query(`
+func GetSession(sessionID string) models.Session {
+	row, err := db.Query(`
 		SELECT *
 		FROM sessions
 		WHERE sessionid = ?
@@ -277,9 +294,9 @@ func (DB *DB) GetSession(sessionID string) models.Session {
 }
 
 // UpdateSession updates session's created time
-func (DB *DB) UpdateSession(updatedSession models.Session) {
+func UpdateSession(updatedSession models.Session) {
 	log.Printf("Updating session with id %v...\n", updatedSession.SessionID)
-	updateSession, err := DB.db.Prepare(`
+	updateSession, err := db.Prepare(`
 		UPDATE sessions
 		SET timecreated = ?
 		WHERE sessionid = ?;
@@ -295,8 +312,8 @@ func (DB *DB) UpdateSession(updatedSession models.Session) {
 }
 
 // GetUserByID gets the user from userid
-func (DB *DB) GetUserByID(userID int) models.User {
-	row, err := DB.db.Query(`
+func GetUserByID(userID int) models.User {
+	row, err := db.Query(`
 		SELECT *
 		FROM users
 		WHERE userid = ?
@@ -315,8 +332,8 @@ func (DB *DB) GetUserByID(userID int) models.User {
 }
 
 // GetUserByEmail gets the user from userid
-func (DB *DB) GetUserByEmail(email string) models.User {
-	row, err := DB.db.Query(`
+func GetUserByEmail(email string) models.User {
+	row, err := db.Query(`
 		SELECT *
 		FROM users
 		WHERE email = ?
@@ -334,8 +351,8 @@ func (DB *DB) GetUserByEmail(email string) models.User {
 }
 
 // GetUserByUsername gets the user from userid
-func (DB *DB) GetUserByUsername(username string) models.User {
-	row, err := DB.db.Query(`
+func GetUserByUsername(username string) models.User {
+	row, err := db.Query(`
 		SELECT *
 		FROM users
 		WHERE username = ?
@@ -350,4 +367,77 @@ func (DB *DB) GetUserByUsername(username string) models.User {
 	}
 
 	return user
+}
+
+func GetPostByID(postid int) models.Post {
+	row, err := db.Query(`
+		SELECT *
+		FROM posts
+		WHERE postid = ?
+	`, postid)
+	defer row.Close()
+
+	errorhandle.Check(err)
+
+	var post models.Post
+	for row.Next() {
+		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.Image, &post.TimeCreated)
+	}
+
+	getPostLikesAndDislikes(&post)
+
+	return post
+}
+
+func getPostLikesAndDislikes(post *models.Post) {
+	likes, err := db.Query(`
+		SELECT COUNT(*)
+		FROM postlikes
+		WHERE (postid = ? AND liked = 1)
+	`, post.PostID)
+	defer likes.Close()
+
+	errorhandle.Check(err)
+
+	for likes.Next() {
+		likes.Scan(&post.Like)
+	}
+
+	dislikes, err := db.Query(`
+		SELECT COUNT(*)
+		FROM postlikes
+		WHERE (postid = ? AND liked = 0)
+	`, post.PostID)
+	defer dislikes.Close()
+
+	errorhandle.Check(err)
+
+	for dislikes.Next() {
+		dislikes.Scan(&post.Dislike)
+	}
+}
+
+func GetPosts() []models.Post {
+	row, err := db.Query(`
+		SELECT *
+		FROM posts
+	`)
+	defer row.Close()
+
+	errorhandle.Check(err)
+
+	var posts []models.Post
+
+	for row.Next() {
+		var post models.Post
+		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.Image, &post.TimeCreated)
+		getPostLikesAndDislikes(&post)
+		posts = append(posts, post)
+	}
+
+	return posts
+}
+
+func Close() {
+	db.Close()
 }
