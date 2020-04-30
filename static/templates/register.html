@@ -1,0 +1,46 @@
+{{ template "header.html" . }}
+
+<div class="container mt-5">
+    <h1>Register</h1>
+
+    {{ if .Data }}
+    <p>{{ .Data }}</p>
+    {{ end }}
+
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="card">
+                <div class="card-body">
+
+                    <!-- Makes POST request to /register route -->
+                    <form method="POST">
+                        <div class="form-group">
+                            <label for="firstname">First name</label>
+                            <input type="text" class="form-control" name="firstname" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="lastname">Last name</label>
+                            <input type="text" class="form-control" name="lastname" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="username">Username</label>
+                            <input type="text" class="form-control" name="username" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="email">Email</label>
+                            <input type="email" class="form-control" name="email" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" class="form-control" name="password" required>
+                        </div>
+                        <button type="submit" class="btn btn-dark">Register</button>
+                        <a class="btn btn-default" href="/login">I already have an account</a>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ template "footer.html" }}

@@ -1,0 +1,7 @@
+{{ template "header.html" . }}
+
+{{ if .Data }}
+    <h1>Welcome {{ .Data.FirstName }} {{ .Data.LastName}}</h1>
+{{ end }}
+
+{{ template "footer.html" }}

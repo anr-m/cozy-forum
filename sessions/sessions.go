@@ -19,6 +19,7 @@ func CreateSession(userID int, w http.ResponseWriter) {
 		Name:   "session",
 		Value:  sID.String(),
 		MaxAge: 24 * 60 * 60,
+		Path:   "/",
 	}
 
 	session := models.Session{
@@ -63,4 +64,14 @@ func GetUser(w http.ResponseWriter, r *http.Request) models.User {
 func IsLoggedIn(w http.ResponseWriter, r *http.Request) bool {
 	user := GetUser(w, r)
 	return user.UserID != 0
+}
+
+// Logout to log the user out
+func Logout(w http.ResponseWriter, r *http.Request) {
+	c, err := r.Cookie("session")
+	if err != nil {
+		return
+	}
+	c.MaxAge = -1
+	http.SetCookie(w, c)
 }

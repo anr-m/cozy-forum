@@ -45,7 +45,7 @@ func SetUp() {
 		category    TEXT NOT NULL,
 		title       TEXT NOT NULL,
 		content     TEXT NOT NULL,
-		image       BLOB,
+		image       TEXT,
 		timecreated TIMESTAMP NOT NULL,
 		FOREIGN KEY (userid) REFERENCES users(userid)
 	);`
@@ -157,7 +157,7 @@ func CreatePost(newPost *models.Post) {
 		newPost.Category,
 		newPost.Title,
 		newPost.Content,
-		newPost.Image,
+		newPost.HTMLImage,
 		newPost.TimeCreated,
 	)
 	errorhandle.Check(err)
@@ -381,7 +381,7 @@ func GetPostByID(postid int) models.Post {
 
 	var post models.Post
 	for row.Next() {
-		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.Image, &post.TimeCreated)
+		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated)
 	}
 
 	getPostLikesAndDislikes(&post)
@@ -430,7 +430,29 @@ func GetPosts() []models.Post {
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.Image, &post.TimeCreated)
+		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated)
+		getPostLikesAndDislikes(&post)
+		posts = append(posts, post)
+	}
+
+	return posts
+}
+
+func GetPostsByCategory(category string) []models.Post {
+	row, err := db.Query(`
+		SELECT *
+		FROM posts
+		WHERE category = ?
+	`, category)
+	defer row.Close()
+
+	errorhandle.Check(err)
+
+	var posts []models.Post
+
+	for row.Next() {
+		var post models.Post
+		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated)
 		getPostLikesAndDislikes(&post)
 		posts = append(posts, post)
 	}

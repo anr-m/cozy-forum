@@ -1,7 +1,15 @@
 package controllers
 
 import (
+	"bytes"
+	"encoding/base64"
 	"fmt"
+	"html/template"
+	"image"
+	"image/gif"
+	"image/jpeg"
+	"image/png"
+	"io"
 	"net/http"
 	"path"
 	"regexp"
@@ -12,22 +20,28 @@ import (
 	"../errorhandle"
 	"../models"
 	"../sessions"
+	"../tpl"
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
 
+type pageData struct {
+	PageTitle string
+	User      models.User
+	Data      interface{}
+}
+
 // Index route
 func Index(w http.ResponseWriter, r *http.Request) {
-	if sessions.IsLoggedIn(w, r) {
-		user := sessions.GetUser(w, r)
-		w.Write([]byte("Welcome " + user.FirstName + " " + user.LastName))
-	} else {
-		w.Write([]byte("You are not logged in"))
-	}
+	data := pageData{"Home", sessions.GetUser(w, r), nil}
+	tpl.ExecuteTemplate(w, "index.html", data)
 }
 
 // Register route
 func Register(w http.ResponseWriter, r *http.Request) {
+
+	data := pageData{"Register", models.User{}, nil}
+
 	if r.Method == http.MethodPost {
 		var newUser models.User
 		regex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
@@ -39,28 +53,44 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		if newUser.Email == "" {
-			w.Write([]byte("Email must not be empty"))
+			data.Data = "Email must not be empty"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "register.html", data)
 			return
 		} else if !regex.MatchString(newUser.Email) {
-			w.Write([]byte("Enter valid email"))
+			data.Data = "Invalid email"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "register.html", data)
 			return
 		} else if db.EmailExists(newUser.Email) {
-			w.Write([]byte("Email exists"))
+			data.Data = "Email already exists"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "register.html", data)
 			return
 		} else if newUser.Username == "" {
-			w.Write([]byte("Username must not be empty"))
+			data.Data = "Username must not be empty"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "register.html", data)
 			return
 		} else if db.UsernameExists(newUser.Username) {
-			w.Write([]byte("Username exists"))
+			data.Data = "Username exists"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "register.html", data)
 			return
 		} else if len(password) < 8 {
-			w.Write([]byte("Password must be at least 8 characters"))
+			data.Data = "Password must be at least 8 characters"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "register.html", data)
 			return
 		} else if newUser.FirstName == "" {
-			w.Write([]byte("First Name must not be empty"))
+			data.Data = "First Name must not be empty"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "register.html", data)
 			return
 		} else if newUser.LastName == "" {
-			w.Write([]byte("Last Name must not be empty"))
+			data.Data = "Last Name must not be empty"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "register.html", data)
 			return
 		}
 
@@ -75,22 +105,17 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		db.CreateUser(&newUser)
 		sessions.CreateSession(newUser.UserID, w)
 
-		w.Write([]byte("Successfully registered"))
+		http.Redirect(w, r, "/index", http.StatusFound)
 	} else if r.Method == http.MethodGet {
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<form method="POST">
-			<input type="text" name="username" placeholder="username" required><br>
-			<input type="email" name="email" placeholder="email" required><br>
-			<input type="password" name="password" placeholder="password" required><br>
-			<input type="text" name="firstname" placeholder="first name" required><br>
-			<input type="text" name="lastname" placeholder="last name" required><br>
-			<button type="submit">Submit</button>
-		</form>`))
+		tpl.ExecuteTemplate(w, "register.html", data)
 	}
 }
 
 // Login route
 func Login(w http.ResponseWriter, r *http.Request) {
+
+	data := pageData{"Login", models.User{}, nil}
+
 	if r.Method == http.MethodPost {
 		regex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
 
@@ -98,43 +123,60 @@ func Login(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		if username == "" {
-			w.Write([]byte("Username must not be empty"))
+			data.Data = "Username must not be empty"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "login.html", data)
 			return
 		} else if password == "" {
-			w.Write([]byte("Password must not be empty"))
+			data.Data = "Password must not be empty"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "login.html", data)
 			return
 		}
 
 		if regex.MatchString(username) {
 			if !db.EmailExists(username) {
-				w.Write([]byte("Invalid email"))
+				data.Data = "Invalid email"
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				tpl.ExecuteTemplate(w, "login.html", data)
 				return
 			}
 			user := db.GetUserByEmail(username)
 			err := bcrypt.CompareHashAndPassword(user.Hash, []byte(password+user.Salt))
-			errorhandle.Check(err)
+			if err != nil {
+				data.Data = "Incorrect password"
+				w.WriteHeader(http.StatusUnauthorized)
+				tpl.ExecuteTemplate(w, "login.html", data)
+			}
 			sessions.CreateSession(user.UserID, w)
 		} else {
 			if !db.UsernameExists(username) {
-				w.Write([]byte("Invalid username"))
+				data.Data = "Invalid username"
+				w.WriteHeader(http.StatusUnprocessableEntity)
+				tpl.ExecuteTemplate(w, "login.html", data)
 				return
 			}
 			user := db.GetUserByUsername(username)
 			err := bcrypt.CompareHashAndPassword(user.Hash, []byte(password+user.Salt))
-			errorhandle.Check(err)
+			if err != nil {
+				data.Data = "Incorrect password"
+				w.WriteHeader(http.StatusUnauthorized)
+				tpl.ExecuteTemplate(w, "login.html", data)
+			}
 			sessions.CreateSession(user.UserID, w)
 		}
 
-		http.Redirect(w, r, "/", http.StatusFound)
+		http.Redirect(w, r, "/index", http.StatusFound)
 
 	} else if r.Method == http.MethodGet {
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<form method="POST">
-			<input type="text" name="username" placeholder="username or email" required><br>
-			<input type="password" name="password" placeholder="password" required><br>
-			<button type="submit">Submit</button>
-		</form>`))
+		tpl.ExecuteTemplate(w, "login.html", data)
 	}
+}
+
+// Logout route
+func Logout(w http.ResponseWriter, r *http.Request) {
+	sessions.Logout(w, r)
+	http.Redirect(w, r, "/index", http.StatusSeeOther)
 }
 
 // CreatePost route
@@ -143,8 +185,10 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/login", http.StatusSeeOther)
 	}
 
+	data := pageData{"Create Post", sessions.GetUser(w, r), nil}
+
 	if r.Method == http.MethodPost {
-		regex := regexp.MustCompile(`^.*\.(jpg|JPG|jpeg|JPEG|gif|GIF|png|PNG|svg|SVG)$`)
+		regex := regexp.MustCompile(`^.*\.(jpg|JPG|jpeg|JPEG|gif|GIF|png|PNG)$`)
 		catregex := regexp.MustCompile(`^(gaming|technology|programming|books|music)$`)
 
 		mf, fh, _ := r.FormFile("image")
@@ -157,29 +201,55 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		content := r.FormValue("content")
 
 		if category == "" {
-			w.Write([]byte("Category must not be empty."))
+			data.Data = "Category must not be empty"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "createpost.html", data)
 			return
 		} else if !catregex.MatchString(category) {
-			w.Write([]byte("Invalid category."))
+			data.Data = "Invalid category"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "createpost.html", data)
 			return
 		} else if title == "" {
-			w.Write([]byte("Title must not be empty."))
+			data.Data = "Title must not be empty"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "createpost.html", data)
 			return
 		} else if content == "" {
-			w.Write([]byte("Content must not be empty."))
+			data.Data = "Content must not be empty"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "createpost.html", data)
 			return
 		} else if fh != nil && fh.Size > 20000000 {
-			w.Write([]byte("File too large. Please limit size to 20MB."))
+			data.Data = "File too large, please limit size to 20MB"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "createpost.html", data)
 			return
 		} else if fh != nil && !regex.MatchString(fh.Filename) {
-			w.Write([]byte("Invalid file type. Please upload jpg, jpeg, png, gif, svg"))
+			data.Data = "Invalid file type, please upload jpg, jpeg, png, gif"
+			w.WriteHeader(http.StatusUnprocessableEntity)
+			tpl.ExecuteTemplate(w, "createpost.html", data)
 			return
 		}
 
-		var bytes []byte
+		var encodedImage string
 		if fh != nil {
-			bytes = make([]byte, fh.Size)
-			mf.Read(bytes)
+			var buff bytes.Buffer
+			img, ext, err := image.Decode(mf)
+			errorhandle.Check(err)
+			switch ext {
+			case "png":
+				png.Encode(&buff, img)
+			case "jpg", "jpeg":
+				jpeg.Encode(&buff, img, nil)
+			case "gif":
+				mf.Seek(0, io.SeekStart)
+				gifimg, err := gif.DecodeAll(mf)
+				errorhandle.Check(err)
+				gif.EncodeAll(&buff, gifimg)
+			}
+			png.Encode(&buff, img)
+			encodedImage = fmt.Sprintf(`<img src="data:image/%v;base64, %v"/>`, ext, base64.StdEncoding.EncodeToString(buff.Bytes()))
 		}
 
 		newPost := models.Post{
@@ -187,7 +257,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 			Category:    category,
 			Title:       title,
 			Content:     content,
-			Image:       bytes,
+			HTMLImage:   template.HTML(encodedImage),
 			TimeCreated: time.Now(),
 		}
 
@@ -196,14 +266,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, fmt.Sprintf("/posts/id/%d", newPost.PostID), http.StatusSeeOther)
 
 	} else if r.Method == http.MethodGet {
-		w.Header().Set("Content-Type", "text/html")
-		w.Write([]byte(`<form method="POST" enctype="multipart/form-data">
-			<input type="text" name="category" placeholder="category" required><br>
-			<input type="text" name="title" placeholder="title" required><br>
-			<input type="text" name="content" placeholder="content" required><br>
-			<input type="file" name="image" accept=".jpg,.JPG,.png,.PNG,.gif,.GIF,.svg,.SVG"><br>
-			<button type="submit">Submit</button>
-		</form>`))
+		tpl.ExecuteTemplate(w, "createpost.html", data)
 	}
 }
 
@@ -211,21 +274,24 @@ func GetPostByID(w http.ResponseWriter, r *http.Request) {
 	dir, endpoint := path.Split(r.URL.Path)
 	postid, _ := strconv.Atoi(endpoint)
 
+	data := pageData{"Not found", sessions.GetUser(w, r), nil}
+
 	if dir != "/posts/id/" || postid == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Not Found"))
+		NotFoundHandler(w, r)
 		return
 	}
 
 	post := db.GetPostByID(postid)
 
 	if post.PostID != postid {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("404 Not Found"))
+		NotFoundHandler(w, r)
 		return
 	}
 
-	fmt.Fprintln(w, post)
+	data.PageTitle = post.Title
+	data.Data = post
+
+	tpl.ExecuteTemplate(w, "post.html", data)
 }
 
 func CreateComment(w http.ResponseWriter, r *http.Request) {
@@ -274,5 +340,21 @@ func GetPosts(w http.ResponseWriter, r *http.Request) {
 }
 
 func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
+	dir, category := path.Split(r.URL.Path)
+	catregex := regexp.MustCompile(`^(gaming|technology|programming|books|music)$`)
 
+	if dir != "/posts/" || !catregex.MatchString(category) {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("Invalid path/category"))
+		return
+	}
+
+	posts := db.GetPostsByCategory(category)
+
+	fmt.Fprintln(w, posts)
+}
+
+func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
+	tpl.ExecuteTemplate(w, "notfound.html", pageData{"Not Found", sessions.GetUser(w, r), nil})
 }

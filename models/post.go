@@ -1,6 +1,9 @@
 package models
 
-import "time"
+import (
+	"html/template"
+	"time"
+)
 
 // Post type for DB
 type Post struct {
@@ -9,7 +12,7 @@ type Post struct {
 	Category    string
 	Title       string
 	Content     string
-	Image       []byte
+	HTMLImage   template.HTML
 	Like        int
 	Dislike     int
 	TimeCreated time.Time

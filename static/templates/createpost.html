@@ -1,0 +1,47 @@
+{{ template "header.html" . }}
+
+<div class="container mt-5">
+    <h1>Create Post</h1>
+
+    {{ if .Data }}
+    <p>{{ .Data }}</p>
+    {{ end }}
+
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="card">
+                <div class="card-body">
+
+                    <!-- Makes POST request to /register route -->
+                    <form method="POST" enctype="multipart/form-data">
+                        <div class="form-group">
+                            <label for="category">Category</label>
+                            <select class="form-control" name="category" required>
+                                <option value="gaming" selected>Gaming</option>
+                                <option value="technology">Technology</option>
+                                <option value="programming">Programming</option>
+                                <option value="books">Books</option>
+                                <option value="music">Music</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="title">Title</label>
+                            <input type="text" class="form-control" name="title" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="content">Content</label>
+                            <textarea name="content" class="form-control post-input" rows="7" required></textarea>
+                        </div>
+                        <div class="form-group">
+                            <label for="image">Image</label><br>
+                            <input type="file" name="image" accept=".jpg,.JPG,.png,.PNG,.gif,.GIF,.svg,.SVG"><br>
+                        </div>
+                        <button type="submit" class="btn btn-dark">Create</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{{ template "footer.html" }}
