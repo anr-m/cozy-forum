@@ -2,6 +2,10 @@ body {
     background-color: #E8ECEF;
 }
 
+/* .container {
+    margin-bottom: 5rem;
+} */
+
 /* 
 .container-fluid {
     padding-top: 70px;
@@ -21,7 +25,32 @@ body {
     color: #1abc9c !important;
 } */
 
+.comment-form {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
 
+img{
+    max-height:500px;
+    max-width:500px;
+    height:auto;
+    width:auto;
+    display: table;
+}
+
+.row {
+    margin-top: 1rem;
+    margin-bottom: 1rem;
+}
+
+.like-active {
+    margin-top: 1rem;
+    width: 5rem;
+}
+
+.comment {
+    margin-top: 1rem;
+}
 
 .footer-padding {
 	padding-bottom: 60px;

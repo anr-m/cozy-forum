@@ -1,12 +1,62 @@
 {{ template "header.html" . }}
 
 <div class="container mt-5">
-    <h1>{{ .Data.Title }}</h1>
-    <p>Category: {{ .Data.Category }}</p>
+    <h1>{{ .Data.Post.Title }}</h1>
+    <p>Category: {{ .Data.Post.Category }}</p>
 
-    <h5>{{ .Data.Content }}</h5>
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="card">
+                <div class="card-body">
+                    <h5>{{ .Data.Post.Content }}</h5>
 
-    {{ .Data.HTMLImage }}
+                    {{ .Data.Post.HTMLImage }}
+
+                    <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Data.Post.Like }}</button>
+                    <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Data.Post.Dislike }}</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {{ if ne (.User.UserID) (0) }}
+    <div class="row comment-form">
+        <div class="col-sm-8">
+            <div class="card">
+                <div class="card-body">
+                    <form action="/comment" method="POST">
+                        <div class="form-group">
+                            <label for="text">Comment</label>
+                            <textarea name="text" class="form-control post-input" rows="4" required></textarea>
+                        </div>
+                        <input name="postid" value="{{ .Data.Post.PostID }}" hidden required>
+                        <button type="submit" class="btn btn-dark">Send</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+
+    {{ if .Data.Comments }}
+        {{ range .Data.Comments }}
+        <div class="row">
+            <div class="col-sm-8">
+                <div class="card">
+                    <div class="card-body">
+                        
+                        <p>{{ .Username }}</p>
+                        <p>{{ .TimeCreated }}</p>
+                        <p>{{ .Text }}</p>
+    
+                        <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Like }}</button>
+                        <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Dislike }}</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {{ end }}
+    {{ end }}
 </div>
 
 {{ template "footer.html" }}

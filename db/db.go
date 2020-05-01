@@ -60,10 +60,10 @@ func SetUp() {
 	createCommentTableSQL := `CREATE TABLE IF NOT EXISTS comments (
 		commentid   INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		postid      INTEGER NOT NULL,
-		userid      INTEGER NOT NULL,
+		username    TEXT NOT NULL,
 		text  	    TEXT NOT NULL,
 		timecreated TIMESTAMP NOT NULL,
-		FOREIGN KEY (userid) REFERENCES users(userid),
+		FOREIGN KEY (username) REFERENCES users(username),
 		FOREIGN KEY (postid) REFERENCES posts(postid)
 	);`
 
@@ -168,16 +168,16 @@ func CreatePost(newPost *models.Post) {
 
 // CreateComment to create a new comment
 func CreateComment(newComment *models.Comment) {
-	log.Printf("Creating new comment from userid %d for post %d...\n", newComment.UserID, newComment.PostID)
+	log.Printf("Creating new comment from username %v for post %d...\n", newComment.Username, newComment.PostID)
 	createComment, err := db.Prepare(`
 		INSERT INTO comments
-		(userid, postid, text, timecreated)
+		(username, postid, text, timecreated)
 		VALUES (?, ?, ?, ?);
 	`)
 
 	errorhandle.Check(err)
 	res, err := createComment.Exec(
-		newComment.UserID,
+		newComment.Username,
 		newComment.PostID,
 		newComment.Text,
 		newComment.TimeCreated,
@@ -458,6 +458,56 @@ func GetPostsByCategory(category string) []models.Post {
 	}
 
 	return posts
+}
+
+func GetCommentsByPostID(postid int) []models.Comment {
+	row, err := db.Query(`
+		SELECT *
+		FROM comments
+		WHERE postid = ?
+	`, postid)
+	defer row.Close()
+
+	errorhandle.Check(err)
+
+	var comments []models.Comment
+
+	for row.Next() {
+		var comment models.Comment
+		row.Scan(&comment.CommentID, &comment.PostID, &comment.Username, &comment.Text, &comment.TimeCreated)
+		getCommentLikesAndDislikes(&comment)
+		comments = append(comments, comment)
+	}
+
+	return comments
+}
+
+func getCommentLikesAndDislikes(comment *models.Comment) {
+	likes, err := db.Query(`
+	SELECT COUNT(*)
+	FROM commentlikes
+	WHERE (postid = ? AND liked = 1)
+`, comment.CommentID)
+	defer likes.Close()
+
+	errorhandle.Check(err)
+
+	for likes.Next() {
+		likes.Scan(&comment.Like)
+	}
+
+	dislikes, err := db.Query(`
+	SELECT COUNT(*)
+	FROM commentlikes
+	WHERE (postid = ? AND liked = 0)
+`, comment.CommentID)
+	defer dislikes.Close()
+
+	errorhandle.Check(err)
+
+	for dislikes.Next() {
+		dislikes.Scan(&comment.Dislike)
+	}
 }
 
 func Close() {

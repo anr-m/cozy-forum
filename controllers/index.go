@@ -33,14 +33,13 @@ type pageData struct {
 
 // Index route
 func Index(w http.ResponseWriter, r *http.Request) {
-	data := pageData{"Home", sessions.GetUser(w, r), nil}
-	tpl.ExecuteTemplate(w, "index.html", data)
+	http.Redirect(w, r, "/posts", http.StatusSeeOther)
 }
 
 // Register route
 func Register(w http.ResponseWriter, r *http.Request) {
 
-	data := pageData{"Register", models.User{}, nil}
+	data := pageData{"Register", sessions.GetUser(w, r), nil}
 
 	if r.Method == http.MethodPost {
 		var newUser models.User
@@ -114,7 +113,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 // Login route
 func Login(w http.ResponseWriter, r *http.Request) {
 
-	data := pageData{"Login", models.User{}, nil}
+	data := pageData{"Login", sessions.GetUser(w, r), nil}
 
 	if r.Method == http.MethodPost {
 		regex := regexp.MustCompile("^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$")
@@ -270,11 +269,12 @@ func CreatePost(w http.ResponseWriter, r *http.Request) {
 	}
 }
 
+// GetPostByID route for getting a post by id
 func GetPostByID(w http.ResponseWriter, r *http.Request) {
 	dir, endpoint := path.Split(r.URL.Path)
 	postid, _ := strconv.Atoi(endpoint)
 
-	data := pageData{"Not found", sessions.GetUser(w, r), nil}
+	data := pageData{"", sessions.GetUser(w, r), nil}
 
 	if dir != "/posts/id/" || postid == 0 {
 		NotFoundHandler(w, r)
@@ -288,43 +288,41 @@ func GetPostByID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	comments := db.GetCommentsByPostID(postid)
+
 	data.PageTitle = post.Title
-	data.Data = post
+	data.Data = struct {
+		Post     models.Post
+		Comments []models.Comment
+	}{
+		Post:     post,
+		Comments: comments,
+	}
 
 	tpl.ExecuteTemplate(w, "post.html", data)
 }
 
+// CreateComment route for creating comments
 func CreateComment(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodPost {
-		w.Write([]byte("Invalid method"))
 		return
 	}
 
 	if !sessions.IsLoggedIn(w, r) {
-		w.Write([]byte("Not logged in"))
-		return
-	}
-
-	dir, endpoint := path.Split(r.URL.Path)
-	postid, _ := strconv.Atoi(endpoint)
-
-	if dir != "/comment/" || postid == 0 {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Invalid path"))
 		return
 	}
 
 	text := r.FormValue("text")
+	postid, _ := strconv.Atoi(r.FormValue("postid"))
 	user := sessions.GetUser(w, r)
 
-	if text == "" {
-		w.Write([]byte("Invalid comment"))
+	if text == "" || postid == 0 {
 		return
 	}
 
 	newComment := models.Comment{
 		PostID:      postid,
-		UserID:      user.UserID,
+		Username:    user.Username,
 		Text:        text,
 		TimeCreated: time.Now(),
 	}
@@ -334,11 +332,14 @@ func CreateComment(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, fmt.Sprintf("/posts/id/%d", newComment.PostID), http.StatusSeeOther)
 }
 
+// GetPosts route for browsing all posts
 func GetPosts(w http.ResponseWriter, r *http.Request) {
 	posts := db.GetPosts()
-	fmt.Fprintln(w, posts)
+	data := pageData{"All Posts", sessions.GetUser(w, r), posts}
+	tpl.ExecuteTemplate(w, "posts.html", data)
 }
 
+// GetPostsByCategory route for browsing posts by category
 func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
 	dir, category := path.Split(r.URL.Path)
 	catregex := regexp.MustCompile(`^(gaming|technology|programming|books|music)$`)
@@ -350,10 +351,11 @@ func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
 	}
 
 	posts := db.GetPostsByCategory(category)
-
-	fmt.Fprintln(w, posts)
+	data := pageData{category, sessions.GetUser(w, r), posts}
+	tpl.ExecuteTemplate(w, "posts.html", data)
 }
 
+// NotFoundHandler for handling 404 route
 func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	tpl.ExecuteTemplate(w, "notfound.html", pageData{"Not Found", sessions.GetUser(w, r), nil})

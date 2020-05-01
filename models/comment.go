@@ -6,7 +6,7 @@ import "time"
 type Comment struct {
 	CommentID   int
 	PostID      int
-	UserID      int
+	Username    string
 	Text        string
 	Like        int
 	Dislike     int

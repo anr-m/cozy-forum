@@ -25,7 +25,7 @@ func main() {
 	http.HandleFunc("/createpost", controllers.CreatePost)
 	http.HandleFunc("/posts", controllers.GetPosts)
 	http.HandleFunc("/posts/", controllers.GetPostsByCategory)
-	http.HandleFunc("/comment/", controllers.CreateComment)
+	http.HandleFunc("/comment", controllers.CreateComment)
 	http.HandleFunc("/posts/id/", controllers.GetPostByID)
 	log.Println("Server started on port 8080")
 	http.ListenAndServe(":8080", nil)

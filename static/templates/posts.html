@@ -1,0 +1,32 @@
+{{ template "header.html" . }}
+
+<div class="container mt-5">
+    
+    <h1>{{ .PageTitle }}</h1>
+
+    {{ if .Data }}
+    {{ range .Data }}
+    <div class="row">
+        <div class="col-sm-8">
+            <div class="card">
+                <div class="card-body">
+                    <h1>{{ .Title }}</h1>
+                    <p>Category: {{ .Category }}</p>
+                    <h5>{{ .Content }}</h5>
+
+                    {{ .HTMLImage }}
+
+                    <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Like }}</button>
+                    <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Dislike }}</button>
+                    <a href="/posts/id/{{ .PostID }}"><button type="button" class="btn btn-outline-dark comment"><i class="far fa-comments"></i> Comments</button></a>
+                </div>
+            </div>
+        </div>
+    </div>
+    {{ end }}
+    {{ else }}
+        <h1>No posts :/</h1>
+    {{ end }}
+</div>
+
+{{ template "footer.html" }}
