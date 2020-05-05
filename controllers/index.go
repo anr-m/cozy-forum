@@ -360,3 +360,46 @@ func NotFoundHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNotFound)
 	tpl.ExecuteTemplate(w, "notfound.html", pageData{"Not Found", sessions.GetUser(w, r), nil})
 }
+
+func LikePost(w http.ResponseWriter, r *http.Request) {
+	if !sessions.IsLoggedIn(w, r) || r.Method != http.MethodPost {
+		return
+	}
+
+	postid, _ := strconv.Atoi(r.FormValue("postid"))
+	liked := r.FormValue("submit")
+
+	if postid == 0 || !(liked == "like" || liked == "dislike") {
+		return
+	}
+
+	if liked == "like" {
+		db.LikePost(postid, sessions.GetUser(w, r).UserID)
+	} else {
+		db.DislikePost(postid, sessions.GetUser(w, r).UserID)
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/posts/id/%d", postid), http.StatusSeeOther)
+}
+
+func LikeComment(w http.ResponseWriter, r *http.Request) {
+	if !sessions.IsLoggedIn(w, r) || r.Method != http.MethodPost {
+		return
+	}
+
+	commentid, _ := strconv.Atoi(r.FormValue("commentid"))
+	postid, _ := strconv.Atoi(r.FormValue("postid"))
+	liked := r.FormValue("submit")
+
+	if commentid == 0 || !(liked == "like" || liked == "dislike") {
+		return
+	}
+
+	if liked == "like" {
+		db.LikeComment(commentid, sessions.GetUser(w, r).UserID)
+	} else {
+		db.DislikeComment(commentid, sessions.GetUser(w, r).UserID)
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/posts/id/%d", postid), http.StatusSeeOther)
+}

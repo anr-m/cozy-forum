@@ -105,10 +105,10 @@ func SetUp() {
 
 	createCommentLikesTableSQL := `CREATE TABLE IF NOT EXISTS commentlikes (
 		userid   INTEGER NOT NULL,
-		postid   INTEGER NOT NULL,
+		commentid   INTEGER NOT NULL,
 		liked    INTEGER NOT NULL,
 		FOREIGN KEY (userid) REFERENCES users(userid),
-		FOREIGN KEY (postid) REFERENCES posts(postid)
+		FOREIGN KEY (commentid) REFERENCES comments(commentid)
 	);`
 
 	log.Println("Creating commentlikes table...")
@@ -484,10 +484,10 @@ func GetCommentsByPostID(postid int) []models.Comment {
 
 func getCommentLikesAndDislikes(comment *models.Comment) {
 	likes, err := db.Query(`
-	SELECT COUNT(*)
-	FROM commentlikes
-	WHERE (postid = ? AND liked = 1)
-`, comment.CommentID)
+		SELECT COUNT(*)
+		FROM commentlikes
+		WHERE (commentid = ? AND liked = 1)
+	`, comment.CommentID)
 	defer likes.Close()
 
 	errorhandle.Check(err)
@@ -497,10 +497,10 @@ func getCommentLikesAndDislikes(comment *models.Comment) {
 	}
 
 	dislikes, err := db.Query(`
-	SELECT COUNT(*)
-	FROM commentlikes
-	WHERE (postid = ? AND liked = 0)
-`, comment.CommentID)
+		SELECT COUNT(*)
+		FROM commentlikes
+		WHERE (commentid = ? AND liked = 0)
+	`, comment.CommentID)
 	defer dislikes.Close()
 
 	errorhandle.Check(err)
@@ -508,6 +508,190 @@ func getCommentLikesAndDislikes(comment *models.Comment) {
 	for dislikes.Next() {
 		dislikes.Scan(&comment.Dislike)
 	}
+}
+
+func LikePost(postid int, userid int) {
+	log.Printf("Creating new like from userid %d for postid %d...\n", userid, postid)
+	sqlCommand, err := db.Prepare(`
+		INSERT INTO postlikes
+		(userid, postid, liked)
+		VALUES (?, ?, 1);
+	`)
+	errorhandle.Check(err)
+
+	exists, err := db.Query(`
+		SELECT *
+		FROM postlikes
+		WHERE (userid = ? AND postid = ?)
+	`, userid, postid)
+	defer exists.Close()
+
+	errorhandle.Check(err)
+
+	liked := 2
+	for exists.Next() {
+		exists.Scan(&userid, &postid, &liked)
+	}
+
+	if liked == 0 {
+		sqlCommand, err = db.Prepare(`
+			UPDATE postlikes
+			SET liked = 1
+			WHERE (userid = ? AND postid = ?)
+		`)
+		errorhandle.Check(err)
+	} else if liked == 1 {
+		sqlCommand, err = db.Prepare(`
+			DELETE FROM postlikes
+			WHERE (userid = ? AND postid = ?)
+		`)
+		errorhandle.Check(err)
+	}
+
+	_, err = sqlCommand.Exec(
+		userid,
+		postid,
+	)
+	errorhandle.Check(err)
+	log.Printf("Created a new like from userid %d for postid %d\n", userid, postid)
+}
+
+func DislikePost(postid int, userid int) {
+	log.Printf("Creating new dislike from userid %d for postid %d...\n", userid, postid)
+	sqlCommand, err := db.Prepare(`
+		INSERT INTO postlikes
+		(userid, postid, liked)
+		VALUES (?, ?, 0);
+	`)
+	errorhandle.Check(err)
+
+	exists, err := db.Query(`
+		SELECT *
+		FROM postlikes
+		WHERE (userid = ? AND postid = ?)
+	`, userid, postid)
+	defer exists.Close()
+
+	errorhandle.Check(err)
+
+	liked := 2
+	for exists.Next() {
+		exists.Scan(&userid, &postid, &liked)
+	}
+
+	if liked == 1 {
+		sqlCommand, err = db.Prepare(`
+			UPDATE postlikes
+			SET liked = 0
+			WHERE (userid = ? AND postid = ?)
+		`)
+		errorhandle.Check(err)
+	} else if liked == 0 {
+		sqlCommand, err = db.Prepare(`
+			DELETE FROM postlikes
+			WHERE (userid = ? AND postid = ?)
+		`)
+		errorhandle.Check(err)
+	}
+
+	_, err = sqlCommand.Exec(
+		userid,
+		postid,
+	)
+	errorhandle.Check(err)
+	log.Printf("Created a new dislike from userid %d for postid %d\n", userid, postid)
+}
+
+func LikeComment(commentid int, userid int) {
+	log.Printf("Creating new like from userid %d for commentid %d...\n", userid, commentid)
+	sqlCommand, err := db.Prepare(`
+		INSERT INTO commentlikes
+		(userid, commentid, liked)
+		VALUES (?, ?, 1);
+	`)
+	errorhandle.Check(err)
+
+	exists, err := db.Query(`
+		SELECT *
+		FROM commentlikes
+		WHERE (userid = ? AND commentid = ?)
+	`, userid, commentid)
+	defer exists.Close()
+
+	errorhandle.Check(err)
+
+	liked := 2
+	for exists.Next() {
+		exists.Scan(&userid, &commentid, &liked)
+	}
+
+	if liked == 0 {
+		sqlCommand, err = db.Prepare(`
+			UPDATE commentlikes
+			SET liked = 1
+			WHERE (userid = ? AND commentid = ?)
+		`)
+		errorhandle.Check(err)
+	} else if liked == 1 {
+		sqlCommand, err = db.Prepare(`
+			DELETE FROM commentlikes
+			WHERE (userid = ? AND commentid = ?)
+		`)
+		errorhandle.Check(err)
+	}
+
+	_, err = sqlCommand.Exec(
+		userid,
+		commentid,
+	)
+	errorhandle.Check(err)
+	log.Printf("Created a new like from userid %d for commentid %d\n", userid, commentid)
+}
+
+func DislikeComment(commentid int, userid int) {
+	log.Printf("Creating new dislike from userid %d for commentid %d...\n", userid, commentid)
+	sqlCommand, err := db.Prepare(`
+		INSERT INTO commentlikes
+		(userid, commentid, liked)
+		VALUES (?, ?, 0);
+	`)
+	errorhandle.Check(err)
+
+	exists, err := db.Query(`
+		SELECT *
+		FROM commentlikes
+		WHERE (userid = ? AND commentid = ?)
+	`, userid, commentid)
+	defer exists.Close()
+
+	errorhandle.Check(err)
+
+	liked := 2
+	for exists.Next() {
+		exists.Scan(&userid, &commentid, &liked)
+	}
+
+	if liked == 1 {
+		sqlCommand, err = db.Prepare(`
+			UPDATE commentlikes
+			SET liked = 0
+			WHERE (userid = ? AND commentid = ?)
+		`)
+		errorhandle.Check(err)
+	} else if liked == 0 {
+		sqlCommand, err = db.Prepare(`
+			DELETE FROM commentlikes
+			WHERE (userid = ? AND commentid = ?)
+		`)
+		errorhandle.Check(err)
+	}
+
+	_, err = sqlCommand.Exec(
+		userid,
+		commentid,
+	)
+	errorhandle.Check(err)
+	log.Printf("Created a new dislike from userid %d for commentid %d\n", userid, commentid)
 }
 
 func Close() {

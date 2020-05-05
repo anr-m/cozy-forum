@@ -54,6 +54,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) models.User {
 	// session.TimeCreated = time.Now()
 	// db.UpdateSession(session)
 
+	c.Path = "/"
 	c.MaxAge = 24 * 60 * 60
 	http.SetCookie(w, c)
 

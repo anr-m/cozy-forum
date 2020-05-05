@@ -12,8 +12,11 @@
 
                     {{ .Data.Post.HTMLImage }}
 
-                    <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Data.Post.Like }}</button>
-                    <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Data.Post.Dislike }}</button>
+                    <form action="/likepost" method="POST">
+                        <input type="text" name="postid" value="{{ .Data.Post.PostID }}" hidden required>
+                        <button type="submit" name="submit" value="like" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Data.Post.Like }}</button>
+                        <button type="submit" name="submit" value="dislike" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Data.Post.Dislike }}</button>
+                    </form>
                 </div>
             </div>
         </div>
@@ -49,8 +52,13 @@
                         <p>{{ .TimeCreated }}</p>
                         <p>{{ .Text }}</p>
     
-                        <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Like }}</button>
-                        <button type="button" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Dislike }}</button>
+                        <form action="/likecomment" method="POST">
+                            <input type="text" name="commentid" value="{{ .CommentID }}" hidden required>
+                            <input type="text" name="postid" value="{{ .PostID }}" hidden required>
+                            <button type="submit" name="submit" value="like" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Like }}</button>
+                            <button type="submit" name="submit" value="dislike" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Dislike }}</button>
+                        </form>
+
                     </div>
                 </div>
             </div>
