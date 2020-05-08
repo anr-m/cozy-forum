@@ -1,2 +1,3 @@
-Forum
-Empty here at the moment
+## Forum
+### Forum web-site for Alem School.
+#### Technical Stack: Golang, SQLite, HTML/CSS
