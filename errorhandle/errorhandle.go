@@ -1,6 +1,8 @@
 package errorhandle
 
-import "log"
+import (
+	"log"
+)
 
 // Check for handling errors
 func Check(err error) {
