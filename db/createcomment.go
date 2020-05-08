@@ -3,28 +3,37 @@ package db
 import (
 	"log"
 
-	"../errorhandle"
 	"../models"
 )
 
 // CreateComment to create a new comment
-func CreateComment(newComment *models.Comment) {
+func CreateComment(newComment *models.Comment) error {
 	log.Printf("Creating new comment from username %v for post %d...\n", newComment.Username, newComment.PostID)
 	createComment, err := db.Prepare(`
 		INSERT INTO comments
-		(username, postid, text, timecreated)
-		VALUES (?, ?, ?, ?);
+		(username, postid, text, timecreated, timestring)
+		VALUES (?, ?, ?, ?, ?);
 	`)
 
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
+
 	res, err := createComment.Exec(
 		newComment.Username,
 		newComment.PostID,
 		newComment.Text,
 		newComment.TimeCreated,
+		newComment.TimeString,
 	)
-	errorhandle.Check(err)
+
+	if err != nil {
+		return err
+	}
+
 	commentid, _ := res.LastInsertId()
 	newComment.CommentID = int(commentid)
 	log.Printf("Created a new comment with id %d\n", commentid)
+
+	return nil
 }

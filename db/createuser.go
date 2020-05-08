@@ -3,19 +3,21 @@ package db
 import (
 	"log"
 
-	"../errorhandle"
 	"../models"
 )
 
 // CreateUser to create a new user
-func CreateUser(newUser *models.User) {
+func CreateUser(newUser *models.User) error {
 	log.Println("Creating new user...")
 	createUser, err := db.Prepare(`
 		INSERT INTO users
 		(hash, salt, firstname, lastname, username, email)
 		VALUES (?, ?, ?, ?, ?, ?);
 	`)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
+
 	res, err := createUser.Exec(
 		newUser.Hash,
 		newUser.Salt,
@@ -24,8 +26,18 @@ func CreateUser(newUser *models.User) {
 		newUser.Username,
 		newUser.Email,
 	)
-	errorhandle.Check(err)
-	userid, _ := res.LastInsertId()
+	if err != nil {
+		return err
+	}
+
+	userid, err := res.LastInsertId()
 	newUser.UserID = int(userid)
+
+	if err != nil {
+		return err
+	}
+
 	log.Printf("Created a new user with id %d\n", userid)
+
+	return nil
 }

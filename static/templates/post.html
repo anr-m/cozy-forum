@@ -2,8 +2,6 @@
 
 <div class="container mt-5">
     <h1>{{ .Data.Post.Title }}</h1>
-    <p>Category: {{ .Data.Post.Category }}</p>
-
     <div class="row">
         <div class="col-sm-8">
             <div class="card">
@@ -15,13 +13,16 @@
                     <form action="/likepost" method="POST">
                         <input type="text" name="postid" value="{{ .Data.Post.PostID }}" hidden required>
                         <input type="text" name="link" value="/posts/id/{{ .Data.Post.PostID }}" hidden required>
-                        <button type="submit" name="submit" value="like" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Data.Post.Like }}</button>
-                        <button type="submit" name="submit" value="dislike" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Data.Post.Dislike }}</button>
+                        <button type="submit" name="submit" value="like" class="btn btn-{{ if not .Data.Post.Liked }}outline-{{ end }}dark like"><i class="far fa-thumbs-up"></i> {{ .Data.Post.Like }}</button>
+                        <button type="submit" name="submit" value="dislike" class="btn btn-{{ if not .Data.Post.Disliked }}outline-{{ end }}dark like"><i class="far fa-thumbs-down"></i> {{ .Data.Post.Dislike }}</button>
                     </form>
                 </div>
             </div>
         </div>
     </div>
+    <p>Author: {{ .Data.Post.Username }}</p>
+    <p>Category: {{ .Data.Post.Category }}</p>
+    <p>Created: {{ .Data.Post.TimeString }}</p>
 
     {{ if ne (.User.UserID) (0) }}
     <div class="row comment-form">
@@ -49,15 +50,15 @@
                 <div class="card">
                     <div class="card-body">
                         
-                        <p>{{ .Username }}</p>
-                        <p>{{ .TimeCreated }}</p>
+                        <h5>{{ .Username }}</h5>
+                        <p>{{ .TimeString }}</p>
                         <p>{{ .Text }}</p>
     
                         <form action="/likecomment" method="POST">
                             <input type="text" name="commentid" value="{{ .CommentID }}" hidden required>
                             <input type="text" name="link" value="/posts/id/{{ .PostID }}#{{ .CommentID }}" hidden required>
-                            <button type="submit" name="submit" value="like" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Like }}</button>
-                            <button type="submit" name="submit" value="dislike" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Dislike }}</button>
+                            <button type="submit" name="submit" value="like" class="btn btn-{{ if not .Liked }}outline-{{ end }}dark like"><i class="far fa-thumbs-up"></i> {{ .Like }}</button>
+                            <button type="submit" name="submit" value="dislike" class="btn btn-{{ if not .Disliked }}outline-{{ end }}dark like"><i class="far fa-thumbs-down"></i> {{ .Dislike }}</button>
                         </form>
 
                     </div>

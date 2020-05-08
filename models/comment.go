@@ -10,5 +10,8 @@ type Comment struct {
 	Text        string
 	Like        int
 	Dislike     int
+	Liked       bool
+	Disliked    bool
 	TimeCreated time.Time
+	TimeString  string
 }

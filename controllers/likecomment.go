@@ -5,16 +5,12 @@ import (
 	"strconv"
 
 	"../db"
-	"../sessions"
+	"../models"
 )
 
 // LikeComment route for liking and disliking comments
-func LikeComment(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		errorHandler(w, r, http.StatusBadRequest, "400 Bad Request")
-		return
-	}
-
+func LikeComment(w http.ResponseWriter, r *http.Request, user models.User) {
+	var err error
 	commentid, _ := strconv.Atoi(r.FormValue("commentid"))
 	liked := r.FormValue("submit")
 	link := r.FormValue("link")
@@ -25,9 +21,13 @@ func LikeComment(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if liked == "like" {
-		db.LikeComment(commentid, sessions.GetUser(w, r).UserID)
+		err = db.LikeComment(commentid, user.UserID)
 	} else {
-		db.DislikeComment(commentid, sessions.GetUser(w, r).UserID)
+		err = db.DislikeComment(commentid, user.UserID)
+	}
+
+	if internalError(w, r, err) {
+		return
 	}
 
 	http.Redirect(w, r, link, http.StatusSeeOther)

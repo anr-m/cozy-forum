@@ -4,8 +4,8 @@ import (
 	"log"
 )
 
-// Check for handling errors
-func Check(err error) {
+// Fatal for handling errors
+func Fatal(err error) {
 	if err != nil {
 		log.Fatal(err)
 	}

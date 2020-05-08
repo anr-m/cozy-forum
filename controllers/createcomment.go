@@ -8,31 +8,33 @@ import (
 
 	"../db"
 	"../models"
-	"../sessions"
 )
 
 // CreateComment route for creating comments
-func CreateComment(w http.ResponseWriter, r *http.Request) {
-	if r.Method != http.MethodPost {
-		return
-	}
-
+func CreateComment(w http.ResponseWriter, r *http.Request, user models.User) {
 	text := r.FormValue("text")
 	postid, _ := strconv.Atoi(r.FormValue("postid"))
-	user := sessions.GetUser(w, r)
 
 	if text == "" || postid == 0 {
+		errorHandler(w, r, http.StatusBadRequest, "400 Bad Request")
 		return
 	}
+
+	now := time.Now()
 
 	newComment := models.Comment{
 		PostID:      postid,
 		Username:    user.Username,
 		Text:        text,
-		TimeCreated: time.Now(),
+		TimeCreated: now,
+		TimeString:  now.Format("2006-01-02 15:04"),
 	}
 
-	db.CreateComment(&newComment)
+	err := db.CreateComment(&newComment)
 
-	http.Redirect(w, r, fmt.Sprintf("/posts/id/%d", newComment.PostID), http.StatusSeeOther)
+	if internalError(w, r, err) {
+		return
+	}
+
+	http.Redirect(w, r, fmt.Sprintf("/posts/id/%d#%d", newComment.PostID, newComment.CommentID), http.StatusSeeOther)
 }

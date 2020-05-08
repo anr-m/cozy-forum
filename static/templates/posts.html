@@ -11,7 +11,7 @@
             <div class="card">
                 <div class="card-body">
                     <h1>{{ .Title }}</h1>
-                    <p>Category: {{ .Category }}</p>
+                    <p>{{ .Username }}</p>
                     <h5>{{ .Content }}</h5>
 
                     {{ .HTMLImage }}
@@ -19,10 +19,10 @@
                     <form action="/likepost" method="POST">
                         <input type="text" name="postid" value="{{ .PostID }}" hidden required>
                         <input type="text" name="link" value="{{ $.Data.Link }}#{{ .PostID }}" hidden required>
-                        <button type="submit" name="submit" value="like" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-up"></i> {{ .Like }}</button>
-                        <button type="submit" name="submit" value="dislike" class="btn btn-outline-dark like-active"><i class="far fa-thumbs-down"></i> {{ .Dislike }}</button>
+                        <button type="submit" name="submit" value="like" class="btn btn-{{ if not .Liked }}outline-{{ end }}dark like"><i class="far fa-thumbs-up"></i> {{ .Like }}</button>
+                        <button type="submit" name="submit" value="dislike" class="btn btn-{{ if not .Disliked }}outline-{{ end }}dark like"><i class="far fa-thumbs-down"></i> {{ .Dislike }}</button>
+                        <a href="/posts/id/{{ .PostID }}"><button type="button" class="btn btn-outline-dark comment"><i class="far fa-comments"></i> Comments</button></a>
                     </form>
-                    <a href="/posts/id/{{ .PostID }}"><button type="button" class="btn btn-outline-dark comment"><i class="far fa-comments"></i> Comments</button></a>
                 </div>
             </div>
         </div>

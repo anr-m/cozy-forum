@@ -43,7 +43,15 @@ img{
     margin-bottom: 1rem;
 }
 
-.like-active {
+.time {
+    width: 165px;
+    display: block;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: "";
+}
+
+.like {
     margin-top: 1rem;
     width: 5rem;
 }

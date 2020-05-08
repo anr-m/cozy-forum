@@ -3,24 +3,30 @@ package db
 import (
 	"log"
 
-	"../errorhandle"
 	"../models"
 )
 
 // UpdateSession updates session's created time
-func UpdateSession(updatedSession models.Session) {
+func UpdateSession(updatedSession models.Session) error {
 	log.Printf("Updating session with id %v...\n", updatedSession.SessionID)
 	updateSession, err := db.Prepare(`
 		UPDATE sessions
 		SET timecreated = ?
 		WHERE sessionid = ?;
 	`)
+	if err != nil {
+		return err
+	}
 
-	errorhandle.Check(err)
 	_, err = updateSession.Exec(
 		updatedSession.TimeCreated,
 		updatedSession.SessionID,
 	)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("Updated session with id %v\n", updatedSession.SessionID)
+
+	return nil
 }

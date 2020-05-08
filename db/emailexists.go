@@ -1,9 +1,7 @@
 package db
 
-import "../errorhandle"
-
 // EmailExists checks if email is already in database
-func EmailExists(email string) bool {
+func EmailExists(email string) (bool, error) {
 	row, err := db.Query(`
 		SELECT 1
 		FROM users
@@ -11,6 +9,9 @@ func EmailExists(email string) bool {
 	`, email)
 	defer row.Close()
 
-	errorhandle.Check(err)
-	return row.Next()
+	if err != nil {
+		return false, err
+	}
+
+	return row.Next(), nil
 }

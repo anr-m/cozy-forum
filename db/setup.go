@@ -5,6 +5,9 @@ import (
 	"log"
 
 	"../errorhandle"
+
+	// Import the driver only
+	_ "github.com/mattn/go-sqlite3"
 )
 
 // SetUp for setting up DB
@@ -12,7 +15,7 @@ func SetUp() {
 	var err error
 	log.Println("Opening DB...")
 	db, err = sql.Open("sqlite3", "./database.db")
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	log.Println("DB opened")
 
 	createUserTableSQL := `CREATE TABLE IF NOT EXISTS users (
@@ -27,27 +30,30 @@ func SetUp() {
 
 	log.Println("Creating users table...")
 	createUserTable, err := db.Prepare(createUserTableSQL)
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	_, err = createUserTable.Exec()
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	log.Println("Users table created")
 
 	createPostTableSQL := `CREATE TABLE IF NOT EXISTS posts (
 		postid      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		userid      INTEGER NOT NULL,
+		username    TEXT NOT NULL,
 		category    TEXT NOT NULL,
 		title       TEXT NOT NULL,
 		content     TEXT NOT NULL,
 		image       TEXT,
 		timecreated TIMESTAMP NOT NULL,
+		timestring  TEXT NOT NULL,
 		FOREIGN KEY (userid) REFERENCES users(userid)
+		FOREIGN KEY (username) REFERENCES users(username)
 	);`
 
 	log.Println("Creating posts table...")
 	createPostTable, err := db.Prepare(createPostTableSQL)
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	_, err = createPostTable.Exec()
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	log.Println("Posts table created")
 
 	createCommentTableSQL := `CREATE TABLE IF NOT EXISTS comments (
@@ -56,15 +62,16 @@ func SetUp() {
 		username    TEXT NOT NULL,
 		text  	    TEXT NOT NULL,
 		timecreated TIMESTAMP NOT NULL,
+		timestring  TEXT NOT NULL,
 		FOREIGN KEY (username) REFERENCES users(username),
 		FOREIGN KEY (postid) REFERENCES posts(postid)
 	);`
 
 	log.Println("Creating comments table...")
 	createCommentTable, err := db.Prepare(createCommentTableSQL)
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	_, err = createCommentTable.Exec()
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	log.Println("Comments table created")
 
 	createSessionTableSQL := `CREATE TABLE IF NOT EXISTS sessions (
@@ -76,9 +83,9 @@ func SetUp() {
 
 	log.Println("Creating sessions table...")
 	createSessionTable, err := db.Prepare(createSessionTableSQL)
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	_, err = createSessionTable.Exec()
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	log.Println("Sessions table created")
 
 	createPostLikesTableSQL := `CREATE TABLE IF NOT EXISTS postlikes (
@@ -91,9 +98,9 @@ func SetUp() {
 
 	log.Println("Creating postlikes table...")
 	createPostLikesTable, err := db.Prepare(createPostLikesTableSQL)
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	_, err = createPostLikesTable.Exec()
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	log.Println("Postlikes table created")
 
 	createCommentLikesTableSQL := `CREATE TABLE IF NOT EXISTS commentlikes (
@@ -106,8 +113,8 @@ func SetUp() {
 
 	log.Println("Creating commentlikes table...")
 	createCommentLikesTable, err := db.Prepare(createCommentLikesTableSQL)
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	_, err = createCommentLikesTable.Exec()
-	errorhandle.Check(err)
+	errorhandle.Fatal(err)
 	log.Println("Commentlikes table created")
 }

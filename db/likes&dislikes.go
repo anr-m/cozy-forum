@@ -3,19 +3,20 @@ package db
 import (
 	"log"
 
-	"../errorhandle"
 	"../models"
 )
 
 // LikePost ...
-func LikePost(postid int, userid int) {
+func LikePost(postid int, userid int) error {
 	log.Printf("Creating new like from userid %d for postid %d...\n", userid, postid)
 	sqlCommand, err := db.Prepare(`
 		INSERT INTO postlikes
 		(userid, postid, liked)
 		VALUES (?, ?, 1);
 	`)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	exists, err := db.Query(`
 		SELECT *
@@ -24,7 +25,9 @@ func LikePost(postid int, userid int) {
 	`, userid, postid)
 	defer exists.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	liked := 2
 	for exists.Next() {
@@ -37,32 +40,43 @@ func LikePost(postid int, userid int) {
 			SET liked = 1
 			WHERE (userid = ? AND postid = ?)
 		`)
-		errorhandle.Check(err)
+		if err != nil {
+			return err
+		}
 	} else if liked == 1 {
 		sqlCommand, err = db.Prepare(`
 			DELETE FROM postlikes
 			WHERE (userid = ? AND postid = ?)
 		`)
-		errorhandle.Check(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = sqlCommand.Exec(
 		userid,
 		postid,
 	)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("Created a new like from userid %d for postid %d\n", userid, postid)
+
+	return nil
 }
 
 // DislikePost ...
-func DislikePost(postid int, userid int) {
+func DislikePost(postid int, userid int) error {
 	log.Printf("Creating new dislike from userid %d for postid %d...\n", userid, postid)
 	sqlCommand, err := db.Prepare(`
 		INSERT INTO postlikes
 		(userid, postid, liked)
 		VALUES (?, ?, 0);
 	`)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	exists, err := db.Query(`
 		SELECT *
@@ -71,7 +85,9 @@ func DislikePost(postid int, userid int) {
 	`, userid, postid)
 	defer exists.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	liked := 2
 	for exists.Next() {
@@ -84,32 +100,43 @@ func DislikePost(postid int, userid int) {
 			SET liked = 0
 			WHERE (userid = ? AND postid = ?)
 		`)
-		errorhandle.Check(err)
+		if err != nil {
+			return err
+		}
 	} else if liked == 0 {
 		sqlCommand, err = db.Prepare(`
 			DELETE FROM postlikes
 			WHERE (userid = ? AND postid = ?)
 		`)
-		errorhandle.Check(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = sqlCommand.Exec(
 		userid,
 		postid,
 	)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("Created a new dislike from userid %d for postid %d\n", userid, postid)
+
+	return nil
 }
 
 // LikeComment ...
-func LikeComment(commentid int, userid int) {
+func LikeComment(commentid int, userid int) error {
 	log.Printf("Creating new like from userid %d for commentid %d...\n", userid, commentid)
 	sqlCommand, err := db.Prepare(`
 		INSERT INTO commentlikes
 		(userid, commentid, liked)
 		VALUES (?, ?, 1);
 	`)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	exists, err := db.Query(`
 		SELECT *
@@ -118,7 +145,9 @@ func LikeComment(commentid int, userid int) {
 	`, userid, commentid)
 	defer exists.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	liked := 2
 	for exists.Next() {
@@ -131,32 +160,43 @@ func LikeComment(commentid int, userid int) {
 			SET liked = 1
 			WHERE (userid = ? AND commentid = ?)
 		`)
-		errorhandle.Check(err)
+		if err != nil {
+			return err
+		}
 	} else if liked == 1 {
 		sqlCommand, err = db.Prepare(`
 			DELETE FROM commentlikes
 			WHERE (userid = ? AND commentid = ?)
 		`)
-		errorhandle.Check(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = sqlCommand.Exec(
 		userid,
 		commentid,
 	)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("Created a new like from userid %d for commentid %d\n", userid, commentid)
+
+	return nil
 }
 
 // DislikeComment ...
-func DislikeComment(commentid int, userid int) {
+func DislikeComment(commentid int, userid int) error {
 	log.Printf("Creating new dislike from userid %d for commentid %d...\n", userid, commentid)
 	sqlCommand, err := db.Prepare(`
 		INSERT INTO commentlikes
 		(userid, commentid, liked)
 		VALUES (?, ?, 0);
 	`)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	exists, err := db.Query(`
 		SELECT *
@@ -165,7 +205,9 @@ func DislikeComment(commentid int, userid int) {
 	`, userid, commentid)
 	defer exists.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	liked := 2
 	for exists.Next() {
@@ -178,24 +220,33 @@ func DislikeComment(commentid int, userid int) {
 			SET liked = 0
 			WHERE (userid = ? AND commentid = ?)
 		`)
-		errorhandle.Check(err)
+		if err != nil {
+			return err
+		}
 	} else if liked == 0 {
 		sqlCommand, err = db.Prepare(`
 			DELETE FROM commentlikes
 			WHERE (userid = ? AND commentid = ?)
 		`)
-		errorhandle.Check(err)
+		if err != nil {
+			return err
+		}
 	}
 
 	_, err = sqlCommand.Exec(
 		userid,
 		commentid,
 	)
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
+
 	log.Printf("Created a new dislike from userid %d for commentid %d\n", userid, commentid)
+
+	return nil
 }
 
-func getPostLikesAndDislikes(post *models.Post) {
+func getPostLikesAndDislikes(post *models.Post) error {
 	likes, err := db.Query(`
 		SELECT COUNT(*)
 		FROM postlikes
@@ -203,7 +254,9 @@ func getPostLikesAndDislikes(post *models.Post) {
 	`, post.PostID)
 	defer likes.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	for likes.Next() {
 		likes.Scan(&post.Like)
@@ -216,14 +269,18 @@ func getPostLikesAndDislikes(post *models.Post) {
 	`, post.PostID)
 	defer dislikes.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	for dislikes.Next() {
 		dislikes.Scan(&post.Dislike)
 	}
+
+	return nil
 }
 
-func getCommentLikesAndDislikes(comment *models.Comment) {
+func getCommentLikesAndDislikes(comment *models.Comment) error {
 	likes, err := db.Query(`
 		SELECT COUNT(*)
 		FROM commentlikes
@@ -231,7 +288,9 @@ func getCommentLikesAndDislikes(comment *models.Comment) {
 	`, comment.CommentID)
 	defer likes.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	for likes.Next() {
 		likes.Scan(&comment.Like)
@@ -244,9 +303,13 @@ func getCommentLikesAndDislikes(comment *models.Comment) {
 	`, comment.CommentID)
 	defer dislikes.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return err
+	}
 
 	for dislikes.Next() {
 		dislikes.Scan(&comment.Dislike)
 	}
+
+	return nil
 }

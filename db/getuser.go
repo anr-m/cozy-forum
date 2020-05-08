@@ -1,12 +1,14 @@
 package db
 
 import (
-	"../errorhandle"
 	"../models"
 )
 
 // GetUserByID gets the user from userid
-func GetUserByID(userID int) models.User {
+func GetUserByID(userID int) (models.User, error) {
+
+	var user models.User
+
 	row, err := db.Query(`
 		SELECT *
 		FROM users
@@ -14,19 +16,22 @@ func GetUserByID(userID int) models.User {
 	`, userID)
 	defer row.Close()
 
-	errorhandle.Check(err)
-
-	var user models.User
+	if err != nil {
+		return user, err
+	}
 
 	for row.Next() {
 		row.Scan(&user.UserID, &user.Username, &user.Hash, &user.Salt, &user.Email, &user.FirstName, &user.LastName)
 	}
 
-	return user
+	return user, nil
 }
 
 // GetUserByEmail gets the user from userid
-func GetUserByEmail(email string) models.User {
+func GetUserByEmail(email string) (models.User, error) {
+
+	var user models.User
+
 	row, err := db.Query(`
 		SELECT *
 		FROM users
@@ -34,18 +39,22 @@ func GetUserByEmail(email string) models.User {
 	`, email)
 	defer row.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return user, err
+	}
 
-	var user models.User
 	for row.Next() {
 		row.Scan(&user.UserID, &user.Username, &user.Hash, &user.Salt, &user.Email, &user.FirstName, &user.LastName)
 	}
 
-	return user
+	return user, nil
 }
 
 // GetUserByUsername gets the user from userid
-func GetUserByUsername(username string) models.User {
+func GetUserByUsername(username string) (models.User, error) {
+
+	var user models.User
+
 	row, err := db.Query(`
 		SELECT *
 		FROM users
@@ -53,12 +62,13 @@ func GetUserByUsername(username string) models.User {
 	`, username)
 	defer row.Close()
 
-	errorhandle.Check(err)
+	if err != nil {
+		return user, err
+	}
 
-	var user models.User
 	for row.Next() {
 		row.Scan(&user.UserID, &user.Username, &user.Hash, &user.Salt, &user.Email, &user.FirstName, &user.LastName)
 	}
 
-	return user
+	return user, nil
 }

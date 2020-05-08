@@ -8,7 +8,6 @@ import (
 
 	"../db"
 	"../models"
-	"../sessions"
 	"../tpl"
 )
 
@@ -18,32 +17,41 @@ type postData struct {
 }
 
 // GetPosts route for browsing all posts
-func GetPosts(w http.ResponseWriter, r *http.Request) {
-	posts := db.GetPosts()
-	data := pageData{"All Posts", sessions.GetUser(w, r), postData{r.URL.Path, posts}}
-	tpl.ExecuteTemplate(w, "posts.html", data)
+func GetPosts(w http.ResponseWriter, r *http.Request, user models.User) {
+	posts, err := db.GetPosts(user.UserID)
+	if internalError(w, r, err) {
+		return
+	}
+
+	data := pageData{"All Posts", user, postData{r.URL.Path, posts}}
+	internalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
 }
 
 // GetPostByID route for getting a post by id
-func GetPostByID(w http.ResponseWriter, r *http.Request) {
+func GetPostByID(w http.ResponseWriter, r *http.Request, user models.User) {
 	dir, endpoint := path.Split(r.URL.Path)
 	postid, _ := strconv.Atoi(endpoint)
-
-	data := pageData{"", sessions.GetUser(w, r), nil}
+	data := pageData{"", user, nil}
 
 	if dir != "/posts/id/" || postid == 0 {
 		NotFoundHandler(w, r)
 		return
 	}
 
-	post := db.GetPostByID(postid)
+	post, err := db.GetPostByID(postid, user.UserID)
+	if internalError(w, r, err) {
+		return
+	}
 
 	if post.PostID != postid {
 		NotFoundHandler(w, r)
 		return
 	}
 
-	comments := db.GetCommentsByPostID(postid)
+	comments, err := db.GetCommentsByPostID(postid, user.UserID)
+	if internalError(w, r, err) {
+		return
+	}
 
 	data.PageTitle = post.Title
 	data.Data = struct {
@@ -54,37 +62,46 @@ func GetPostByID(w http.ResponseWriter, r *http.Request) {
 		Comments: comments,
 	}
 
-	tpl.ExecuteTemplate(w, "post.html", data)
+	internalError(w, r, tpl.ExecuteTemplate(w, "post.html", data))
 }
 
 // GetPostsByCategory route for browsing posts by category
-func GetPostsByCategory(w http.ResponseWriter, r *http.Request) {
+func GetPostsByCategory(w http.ResponseWriter, r *http.Request, user models.User) {
 	dir, category := path.Split(r.URL.Path)
 	catregex := regexp.MustCompile(`^(Gaming|Technology|Programming|Books|Music)$`)
 
 	if dir != "/posts/" || !catregex.MatchString(category) {
-		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("Invalid path/category"))
+		NotFoundHandler(w, r)
 		return
 	}
 
-	posts := db.GetPostsByCategory(category)
-	data := pageData{category, sessions.GetUser(w, r), postData{r.URL.Path, posts}}
-	tpl.ExecuteTemplate(w, "posts.html", data)
+	posts, err := db.GetPostsByCategory(category, user.UserID)
+	if internalError(w, r, err) {
+		return
+	}
+
+	data := pageData{category, user, postData{r.URL.Path, posts}}
+	internalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
 }
 
 // GetMyPosts ...
-func GetMyPosts(w http.ResponseWriter, r *http.Request) {
-	user := sessions.GetUser(w, r)
-	posts := db.GetPostsByUserID(user.UserID)
+func GetMyPosts(w http.ResponseWriter, r *http.Request, user models.User) {
+	posts, err := db.GetPostsByUserID(user.UserID)
+	if internalError(w, r, err) {
+		return
+	}
+
 	data := pageData{"My Posts", user, postData{r.URL.Path, posts}}
-	tpl.ExecuteTemplate(w, "posts.html", data)
+	internalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
 }
 
 // GetMyLikedPosts ...
-func GetMyLikedPosts(w http.ResponseWriter, r *http.Request) {
-	user := sessions.GetUser(w, r)
-	posts := db.GetLikedPostsByUserID(user.UserID)
+func GetMyLikedPosts(w http.ResponseWriter, r *http.Request, user models.User) {
+	posts, err := db.GetLikedPostsByUserID(user.UserID)
+	if internalError(w, r, err) {
+		return
+	}
+
 	data := pageData{"My Posts", user, postData{r.URL.Path, posts}}
-	tpl.ExecuteTemplate(w, "posts.html", data)
+	internalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
 }

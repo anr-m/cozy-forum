@@ -3,14 +3,20 @@ package tpl
 import (
 	"html/template"
 	"io"
+
+	"../errorhandle"
 )
 
 var tpl *template.Template
 
+// SetUp ...
 func SetUp() {
-	tpl = template.Must(template.ParseGlob("./static/templates/*"))
+	var err error
+	tpl, err = template.ParseGlob("./static/templates/*")
+	errorhandle.Fatal(err)
 }
 
-func ExecuteTemplate(wr io.Writer, name string, data interface{}) {
-	tpl.ExecuteTemplate(wr, name, data)
+// ExecuteTemplate ...
+func ExecuteTemplate(wr io.Writer, name string, data interface{}) error {
+	return tpl.ExecuteTemplate(wr, name, data)
 }

@@ -1,34 +1,54 @@
 package db
 
 import (
-	"../errorhandle"
+	"fmt"
+
 	"../models"
 )
 
 // GetPosts ...
-func GetPosts() []models.Post {
+func GetPosts(userid int) ([]models.Post, error) {
+
+	var posts []models.Post
+
 	row, err := db.Query(`
 		SELECT *
 		FROM posts
 	`)
 	defer row.Close()
 
-	errorhandle.Check(err)
-
-	var posts []models.Post
+	if err != nil {
+		return posts, err
+	}
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated)
-		getPostLikesAndDislikes(&post)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+		err = getPostLikesAndDislikes(&post)
+		if err != nil {
+			return posts, err
+		}
+		if userid != 0 {
+			err = postLikedByUser(&post, userid)
+			if err != nil {
+				return posts, err
+			}
+			err = postDislikedByUser(&post, userid)
+			if err != nil {
+				return posts, err
+			}
+		}
 		posts = append(posts, post)
 	}
 
-	return posts
+	return posts, nil
 }
 
 // GetPostByID ...
-func GetPostByID(postid int) models.Post {
+func GetPostByID(postid int, userid int) (models.Post, error) {
+
+	var post models.Post
+
 	row, err := db.Query(`
 		SELECT *
 		FROM posts
@@ -36,20 +56,37 @@ func GetPostByID(postid int) models.Post {
 	`, postid)
 	defer row.Close()
 
-	errorhandle.Check(err)
-
-	var post models.Post
-	for row.Next() {
-		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated)
+	if err != nil {
+		return post, err
 	}
 
-	getPostLikesAndDislikes(&post)
+	for row.Next() {
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+	}
 
-	return post
+	err = getPostLikesAndDislikes(&post)
+	if err != nil {
+		return post, err
+	}
+	if userid != 0 {
+		err = postLikedByUser(&post, userid)
+		if err != nil {
+			return post, err
+		}
+		err = postDislikedByUser(&post, userid)
+		if err != nil {
+			return post, err
+		}
+	}
+
+	return post, nil
 }
 
 // GetPostsByCategory ...
-func GetPostsByCategory(category string) []models.Post {
+func GetPostsByCategory(category string, userid int) ([]models.Post, error) {
+
+	var posts []models.Post
+
 	row, err := db.Query(`
 		SELECT *
 		FROM posts
@@ -57,22 +94,38 @@ func GetPostsByCategory(category string) []models.Post {
 	`, category)
 	defer row.Close()
 
-	errorhandle.Check(err)
-
-	var posts []models.Post
+	if err != nil {
+		return posts, err
+	}
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated)
-		getPostLikesAndDislikes(&post)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+		err = getPostLikesAndDislikes(&post)
+		if err != nil {
+			return posts, err
+		}
+		if userid != 0 {
+			err = postLikedByUser(&post, userid)
+			if err != nil {
+				return posts, err
+			}
+			err = postDislikedByUser(&post, userid)
+			if err != nil {
+				return posts, err
+			}
+		}
 		posts = append(posts, post)
 	}
 
-	return posts
+	return posts, nil
 }
 
 // GetPostsByUserID ...
-func GetPostsByUserID(userid int) []models.Post {
+func GetPostsByUserID(userid int) ([]models.Post, error) {
+
+	var posts []models.Post
+
 	row, err := db.Query(`
 		SELECT *
 		FROM posts
@@ -80,24 +133,40 @@ func GetPostsByUserID(userid int) []models.Post {
 	`, userid)
 	defer row.Close()
 
-	errorhandle.Check(err)
-
-	var posts []models.Post
+	if err != nil {
+		return posts, err
+	}
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated)
-		getPostLikesAndDislikes(&post)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+		err = getPostLikesAndDislikes(&post)
+		if err != nil {
+			return posts, err
+		}
+		if userid != 0 {
+			err = postLikedByUser(&post, userid)
+			if err != nil {
+				return posts, err
+			}
+			err = postDislikedByUser(&post, userid)
+			if err != nil {
+				return posts, err
+			}
+		}
 		posts = append(posts, post)
 	}
 
-	return posts
+	return posts, nil
 }
 
 // GetLikedPostsByUserID ...
-func GetLikedPostsByUserID(userid int) []models.Post {
+func GetLikedPostsByUserID(userid int) ([]models.Post, error) {
+
+	var posts []models.Post
+
 	row, err := db.Query(`
-		SELECT posts.postid, posts.userid, posts.category, posts.title, posts.content, posts.image, posts.timecreated
+		SELECT posts.postid, posts.userid, posts.username, posts.category, posts.title, posts.content, posts.image, posts.timecreated, posts.timestring
 		FROM posts
 		INNER JOIN postlikes
 		ON posts.postid = postlikes.postid
@@ -105,16 +174,26 @@ func GetLikedPostsByUserID(userid int) []models.Post {
 	`, userid)
 	defer row.Close()
 
-	errorhandle.Check(err)
-
-	var posts []models.Post
+	if err != nil {
+		fmt.Println("error!")
+		return posts, err
+	}
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated)
-		getPostLikesAndDislikes(&post)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+		err = getPostLikesAndDislikes(&post)
+		if err != nil {
+			return posts, err
+		}
+		if userid != 0 {
+			err = postLikedByUser(&post, userid)
+			if err != nil {
+				return posts, err
+			}
+		}
 		posts = append(posts, post)
 	}
 
-	return posts
+	return posts, nil
 }
