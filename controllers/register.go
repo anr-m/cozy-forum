@@ -3,6 +3,7 @@ package controllers
 import (
 	"net/http"
 	"regexp"
+	"unicode"
 
 	"../db"
 	"../models"
@@ -62,8 +63,8 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
-		} else if len(password) < 8 {
-			data.Data = "Password must be at least 8 characters"
+		} else if !validPassword(password) {
+			data.Data = "Password must have at least 8 characters: 1 upper-case, 1 lower-case, and 1 number."
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
@@ -107,4 +108,23 @@ func Register(w http.ResponseWriter, r *http.Request) {
 	} else if r.Method == http.MethodGet {
 		internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 	}
+}
+
+func validPassword(password string) bool {
+	if len(password) < 8 {
+		return false
+	}
+	var upper bool
+	var lower bool
+	var number bool
+	for _, c := range password {
+		if unicode.IsUpper(c) {
+			upper = true
+		} else if unicode.IsLower(c) {
+			lower = true
+		} else if unicode.IsNumber(c) {
+			number = true
+		}
+	}
+	return upper && lower && number
 }
