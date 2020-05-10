@@ -8,7 +8,7 @@
                 <div class="card-body">
                     <h5>{{ .Data.Post.Content }}</h5>
 
-                    {{ .Data.Post.HTMLImage }}
+                    <img src="/images/{{ .Data.Post.PostID }}" alt="">
 
                     <form action="/likepost" method="POST">
                         <input type="text" name="postid" value="{{ .Data.Post.PostID }}" hidden required>

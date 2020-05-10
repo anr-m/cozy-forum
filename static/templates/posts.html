@@ -14,7 +14,7 @@
                     <h6>By: {{ .Username }}</h6>
                     <h5>{{ .Content }}</h5>
 
-                    {{ .HTMLImage }}
+                    <img src="/images/{{ .PostID }}" alt="">
 
                     <form action="/likepost" method="POST">
                         <input type="text" name="postid" value="{{ .PostID }}" hidden required>

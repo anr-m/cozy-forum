@@ -42,7 +42,6 @@ func SetUp() {
 		category    TEXT NOT NULL,
 		title       TEXT NOT NULL,
 		content     TEXT NOT NULL,
-		image       TEXT,
 		timecreated TIMESTAMP NOT NULL,
 		timestring  TEXT NOT NULL,
 		FOREIGN KEY (userid) REFERENCES users(userid)

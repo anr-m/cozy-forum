@@ -1,16 +1,10 @@
 package controllers
 
 import (
-	"bytes"
-	"encoding/base64"
 	"fmt"
-	"html/template"
-	"image"
-	"image/gif"
-	"image/jpeg"
-	"image/png"
 	"io"
 	"net/http"
+	"os"
 	"regexp"
 	"time"
 
@@ -70,36 +64,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request, user models.User) {
 			return
 		}
 
-		var encodedImage string
-		if fh != nil {
-			var buff bytes.Buffer
-			img, ext, err := image.Decode(mf)
-			if internalError(w, r, err) {
-				return
-			}
-
-			switch ext {
-			case "png":
-				png.Encode(&buff, img)
-			case "jpg", "jpeg":
-				jpeg.Encode(&buff, img, nil)
-			case "gif":
-				mf.Seek(0, io.SeekStart)
-				gifimg, err := gif.DecodeAll(mf)
-				if internalError(w, r, err) {
-					return
-				}
-				gif.EncodeAll(&buff, gifimg)
-			}
-
-			err = png.Encode(&buff, img)
-			if internalError(w, r, err) {
-				return
-			}
-
-			encodedImage = fmt.Sprintf(`<img src="data:image/%v;base64, %v"/>`, ext, base64.StdEncoding.EncodeToString(buff.Bytes()))
-		}
-
 		now := time.Now()
 
 		newPost := models.Post{
@@ -108,7 +72,6 @@ func CreatePost(w http.ResponseWriter, r *http.Request, user models.User) {
 			Category:    category,
 			Title:       title,
 			Content:     content,
-			HTMLImage:   template.HTML(encodedImage),
 			TimeCreated: now,
 			TimeString:  now.Format("2006-01-02 15:04"),
 		}
@@ -116,6 +79,15 @@ func CreatePost(w http.ResponseWriter, r *http.Request, user models.User) {
 		err = db.CreatePost(&newPost)
 		if internalError(w, r, err) {
 			return
+		}
+
+		if fh != nil {
+			f, err := os.Create(fmt.Sprintf("./static/images/%v", newPost.PostID))
+			defer f.Close()
+			_, err = io.Copy(f, mf)
+			if internalError(w, r, err) {
+				return
+			}
 		}
 
 		http.Redirect(w, r, fmt.Sprintf("/posts/id/%d", newPost.PostID), http.StatusSeeOther)

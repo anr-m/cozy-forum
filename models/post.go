@@ -1,7 +1,6 @@
 package models
 
 import (
-	"html/template"
 	"time"
 )
 
@@ -13,7 +12,6 @@ type Post struct {
 	Category    string
 	Title       string
 	Content     string
-	HTMLImage   template.HTML
 	Like        int
 	Dislike     int
 	Liked       bool

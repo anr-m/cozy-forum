@@ -23,7 +23,7 @@ func GetPosts(userid int) ([]models.Post, error) {
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
 		err = getPostLikesAndDislikes(&post)
 		if err != nil {
 			return posts, err
@@ -61,7 +61,7 @@ func GetPostByID(postid int, userid int) (models.Post, error) {
 	}
 
 	for row.Next() {
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
 	}
 
 	err = getPostLikesAndDislikes(&post)
@@ -100,7 +100,7 @@ func GetPostsByCategory(category string, userid int) ([]models.Post, error) {
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
 		err = getPostLikesAndDislikes(&post)
 		if err != nil {
 			return posts, err
@@ -139,7 +139,7 @@ func GetPostsByUserID(userid int) ([]models.Post, error) {
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
 		err = getPostLikesAndDislikes(&post)
 		if err != nil {
 			return posts, err
@@ -166,7 +166,7 @@ func GetLikedPostsByUserID(userid int) ([]models.Post, error) {
 	var posts []models.Post
 
 	row, err := db.Query(`
-		SELECT posts.postid, posts.userid, posts.username, posts.category, posts.title, posts.content, posts.image, posts.timecreated, posts.timestring
+		SELECT posts.postid, posts.userid, posts.username, posts.category, posts.title, posts.content, posts.timecreated, posts.timestring
 		FROM posts
 		INNER JOIN postlikes
 		ON posts.postid = postlikes.postid
@@ -181,7 +181,7 @@ func GetLikedPostsByUserID(userid int) ([]models.Post, error) {
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.HTMLImage, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Category, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
 		err = getPostLikesAndDislikes(&post)
 		if err != nil {
 			return posts, err

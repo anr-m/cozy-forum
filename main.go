@@ -18,6 +18,7 @@ func init() {
 func main() {
 	defer db.Close()
 	http.Handle("/css/", http.StripPrefix("/css", http.FileServer(http.Dir("./static/css"))))
+	http.Handle("/images/", http.StripPrefix("/images", http.FileServer(http.Dir("./static/images"))))
 	http.HandleFunc("/", controllers.NotFoundHandler)
 	http.HandleFunc("/index", controllers.AllowedMethodsMW([]string{"GET"}, controllers.Index))
 	http.HandleFunc("/register", controllers.AllowedMethodsMW([]string{"GET", "POST"}, controllers.Register))
