@@ -10,7 +10,7 @@ import (
 func CreateSession(newSession models.Session) error {
 	log.Printf("Creating new session for userid %d...\n", newSession.UserID)
 	createSession, err := db.Prepare(`
-		INSERT INTO sessions
+		REPLACE INTO sessions
 		(sessionid, userid, timecreated)
 		VALUES (?, ?, ?);
 	`)

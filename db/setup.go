@@ -75,7 +75,7 @@ func SetUp() {
 
 	createSessionTableSQL := `CREATE TABLE IF NOT EXISTS sessions (
 		sessionid   STRING NOT NULL PRIMARY KEY,
-		userid      INTEGER NOT NULL,
+		userid      INTEGER NOT NULL UNIQUE,
 		timecreated TIMESTAMP NOT NULL,
 		FOREIGN KEY (userid) REFERENCES users(userid)
 	);`
