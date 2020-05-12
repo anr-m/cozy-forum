@@ -1,6 +1,6 @@
 package controllers
 
-import "../models"
+import "cozy-forum/models"
 
 type pageData struct {
 	PageTitle string

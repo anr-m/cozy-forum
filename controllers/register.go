@@ -5,10 +5,11 @@ import (
 	"regexp"
 	"unicode"
 
-	"../db"
-	"../models"
-	"../sessions"
-	"../tpl"
+	"cozy-forum/db"
+	"cozy-forum/models"
+	"cozy-forum/sessions"
+	"cozy-forum/tpl"
+
 	uuid "github.com/satori/go.uuid"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -80,10 +81,7 @@ func Register(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		salt, err := uuid.NewV4()
-		if internalError(w, r, err) {
-			return
-		}
+		salt := uuid.NewV4()
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(password+salt.String()), bcrypt.MinCost)
 		if internalError(w, r, err) {

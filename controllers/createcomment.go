@@ -6,8 +6,8 @@ import (
 	"strconv"
 	"time"
 
-	"../db"
-	"../models"
+	"cozy-forum/db"
+	"cozy-forum/models"
 )
 
 // CreateComment route for creating comments

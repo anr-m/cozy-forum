@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
-	"../db"
-	"../models"
+	"cozy-forum/db"
+	"cozy-forum/models"
 )
 
 // LikePost route for liking and disliking posts

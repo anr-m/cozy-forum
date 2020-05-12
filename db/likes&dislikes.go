@@ -3,7 +3,7 @@ package db
 import (
 	"log"
 
-	"../models"
+	"cozy-forum/models"
 )
 
 // LikePost ...

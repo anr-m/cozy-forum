@@ -4,8 +4,8 @@ import (
 	"log"
 	"net/http"
 
-	"../sessions"
-	"../tpl"
+	"cozy-forum/sessions"
+	"cozy-forum/tpl"
 )
 
 func errorHandler(w http.ResponseWriter, r *http.Request, status int, message string) {

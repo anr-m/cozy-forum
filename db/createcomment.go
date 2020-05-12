@@ -3,7 +3,7 @@ package db
 import (
 	"log"
 
-	"../models"
+	"cozy-forum/models"
 )
 
 // CreateComment to create a new comment

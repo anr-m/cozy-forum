@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"log"
 
-	"../errorhandle"
+	"cozy-forum/errorhandle"
 
 	// Import the driver only
 	_ "github.com/mattn/go-sqlite3"

@@ -1,7 +1,7 @@
 package db
 
 import (
-	"../models"
+	"cozy-forum/models"
 )
 
 // GetSession looks up session by sessionID

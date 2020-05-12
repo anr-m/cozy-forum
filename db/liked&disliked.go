@@ -1,6 +1,6 @@
 package db
 
-import "../models"
+import "cozy-forum/models"
 
 func postLikedByUser(post *models.Post, userid int) error {
 	exists, err := db.Query(`

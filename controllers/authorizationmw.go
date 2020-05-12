@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 
-	"../models"
-	"../sessions"
+	"cozy-forum/models"
+	"cozy-forum/sessions"
 )
 
 // AuthorizationMW is middleware to check if the user is logged in

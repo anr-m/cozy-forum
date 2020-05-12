@@ -8,9 +8,9 @@ import (
 	"regexp"
 	"time"
 
-	"../db"
-	"../models"
-	"../tpl"
+	"cozy-forum/db"
+	"cozy-forum/models"
+	"cozy-forum/tpl"
 )
 
 // CreatePost route

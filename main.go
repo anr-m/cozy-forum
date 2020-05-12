@@ -3,11 +3,12 @@ package main
 import (
 	"log"
 	"net/http"
+	"os"
 
-	"./controllers"
-	"./db"
-	"./errorhandle"
-	"./tpl"
+	"cozy-forum/controllers"
+	"cozy-forum/db"
+	"cozy-forum/errorhandle"
+	"cozy-forum/tpl"
 )
 
 func init() {
@@ -33,6 +34,11 @@ func main() {
 	http.HandleFunc("/likecomment", controllers.AllowedMethodsMW([]string{"POST"}, controllers.AuthorizationMW(true, controllers.LikeComment)))
 	http.HandleFunc("/myposts", controllers.AllowedMethodsMW([]string{"GET"}, controllers.AuthorizationMW(true, controllers.GetMyPosts)))
 	http.HandleFunc("/mylikes", controllers.AllowedMethodsMW([]string{"GET"}, controllers.AuthorizationMW(true, controllers.GetMyLikedPosts)))
-	log.Println("Server started on port 8080")
-	errorhandle.Fatal(http.ListenAndServe(":8080", nil))
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
+	log.Println("Server started on port ", port)
+	errorhandle.Fatal(http.ListenAndServe(":"+port, nil))
 }

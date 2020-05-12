@@ -4,7 +4,7 @@ import (
 	"html/template"
 	"io"
 
-	"../errorhandle"
+	"cozy-forum/errorhandle"
 )
 
 var tpl *template.Template

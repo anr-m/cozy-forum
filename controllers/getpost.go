@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"strconv"
 
-	"../db"
-	"../models"
-	"../tpl"
+	"cozy-forum/db"
+	"cozy-forum/models"
+	"cozy-forum/tpl"
 )
 
 type postData struct {

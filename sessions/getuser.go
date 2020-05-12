@@ -3,8 +3,8 @@ package sessions
 import (
 	"net/http"
 
-	"../db"
-	"../models"
+	"cozy-forum/db"
+	"cozy-forum/models"
 )
 
 // GetUser gets user from the database from the session

@@ -4,17 +4,15 @@ import (
 	"net/http"
 	"time"
 
-	"../db"
-	"../models"
+	"cozy-forum/db"
+	"cozy-forum/models"
+
 	uuid "github.com/satori/go.uuid"
 )
 
 // CreateSession creates session for the userid
 func CreateSession(userID int, w http.ResponseWriter) error {
-	sID, err := uuid.NewV4()
-	if err != nil {
-		return err
-	}
+	sID := uuid.NewV4()
 
 	c := &http.Cookie{
 		Name:   "session",
@@ -29,7 +27,7 @@ func CreateSession(userID int, w http.ResponseWriter) error {
 		TimeCreated: time.Now(),
 	}
 
-	err = db.CreateSession(session)
+	err := db.CreateSession(session)
 	if err != nil {
 		return err
 	}

@@ -3,7 +3,7 @@ package db
 import (
 	"log"
 
-	"../models"
+	"cozy-forum/models"
 )
 
 // CreateUser to create a new user

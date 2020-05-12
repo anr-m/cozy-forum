@@ -3,7 +3,7 @@ package db
 import (
 	"fmt"
 
-	"../models"
+	"cozy-forum/models"
 )
 
 // GetPosts ...

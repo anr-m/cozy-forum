@@ -3,7 +3,7 @@ package controllers
 import (
 	"net/http"
 
-	"../sessions"
+	"cozy-forum/sessions"
 )
 
 // Logout route

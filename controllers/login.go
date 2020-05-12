@@ -4,10 +4,11 @@ import (
 	"net/http"
 	"regexp"
 
-	"../db"
-	"../models"
-	"../sessions"
-	"../tpl"
+	"cozy-forum/db"
+	"cozy-forum/models"
+	"cozy-forum/sessions"
+	"cozy-forum/tpl"
+
 	"golang.org/x/crypto/bcrypt"
 )
 
