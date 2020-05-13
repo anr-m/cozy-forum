@@ -2,10 +2,12 @@ package controllers
 
 import (
 	"fmt"
+	"html/template"
 	"io"
 	"net/http"
 	"os"
 	"regexp"
+	"strings"
 	"time"
 
 	"cozy-forum/db"
@@ -79,7 +81,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, data models.PageData) {
 			Username:    data.User.Username,
 			Categories:  categories,
 			Title:       title,
-			Content:     content,
+			Content:     template.HTML(strings.ReplaceAll(content, "\n", "<br>")),
 			TimeCreated: now,
 			TimeString:  now.Format("2006-01-02 15:04"),
 		}

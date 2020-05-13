@@ -1,6 +1,7 @@
 package models
 
 import (
+	"html/template"
 	"time"
 )
 
@@ -10,7 +11,7 @@ type Post struct {
 	UserID      int
 	Username    string
 	Title       string
-	Content     string
+	Content     template.HTML
 	Categories  []string
 	Like        int
 	Dislike     int
