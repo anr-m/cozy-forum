@@ -3,7 +3,6 @@ package controllers
 import (
 	"net/http"
 	"path"
-	"regexp"
 	"strconv"
 
 	"cozy-forum/db"
@@ -17,29 +16,29 @@ type postData struct {
 }
 
 // GetPosts route for browsing all posts
-func GetPosts(w http.ResponseWriter, r *http.Request, user models.User) {
-	posts, err := db.GetPosts(user.UserID)
-	if internalError(w, r, err) {
+func GetPosts(w http.ResponseWriter, r *http.Request, data models.PageData) {
+	posts, err := db.GetPosts(data.User.UserID)
+	if InternalError(w, r, err) {
 		return
 	}
 
-	data := pageData{"All Posts", user, postData{r.URL.Path, posts}}
-	internalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
+	data.PageTitle = "All Posts"
+	data.Data = postData{r.URL.Path, posts}
+	InternalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
 }
 
 // GetPostByID route for getting a post by id
-func GetPostByID(w http.ResponseWriter, r *http.Request, user models.User) {
+func GetPostByID(w http.ResponseWriter, r *http.Request, data models.PageData) {
 	dir, endpoint := path.Split(r.URL.Path)
 	postid, _ := strconv.Atoi(endpoint)
-	data := pageData{"", user, nil}
 
 	if dir != "/posts/id/" || postid == 0 {
 		NotFoundHandler(w, r)
 		return
 	}
 
-	post, err := db.GetPostByID(postid, user.UserID)
-	if internalError(w, r, err) {
+	post, err := db.GetPostByID(postid, data.User.UserID)
+	if InternalError(w, r, err) {
 		return
 	}
 
@@ -48,8 +47,8 @@ func GetPostByID(w http.ResponseWriter, r *http.Request, user models.User) {
 		return
 	}
 
-	comments, err := db.GetCommentsByPostID(postid, user.UserID)
-	if internalError(w, r, err) {
+	comments, err := db.GetCommentsByPostID(postid, data.User.UserID)
+	if InternalError(w, r, err) {
 		return
 	}
 
@@ -62,46 +61,58 @@ func GetPostByID(w http.ResponseWriter, r *http.Request, user models.User) {
 		Comments: comments,
 	}
 
-	internalError(w, r, tpl.ExecuteTemplate(w, "post.html", data))
+	InternalError(w, r, tpl.ExecuteTemplate(w, "post.html", data))
 }
 
 // GetPostsByCategory route for browsing posts by category
-func GetPostsByCategory(w http.ResponseWriter, r *http.Request, user models.User) {
+func GetPostsByCategory(w http.ResponseWriter, r *http.Request, data models.PageData) {
 	dir, category := path.Split(r.URL.Path)
-	catregex := regexp.MustCompile(`^(Gaming|Technology|Programming|Books|Music)$`)
 
-	if dir != "/posts/" || !catregex.MatchString(category) {
+	if dir != "/posts/" {
 		NotFoundHandler(w, r)
 		return
 	}
 
-	posts, err := db.GetPostsByCategory(category, user.UserID)
-	if internalError(w, r, err) {
+	for i := range data.Categories {
+		if category == data.Categories[i] {
+			break
+		}
+		if i == len(data.Categories)-1 {
+			NotFoundHandler(w, r)
+			return
+		}
+	}
+
+	posts, err := db.GetPostsByCategory(category, data.User.UserID)
+	if InternalError(w, r, err) {
 		return
 	}
 
-	data := pageData{category, user, postData{r.URL.Path, posts}}
-	internalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
+	data.PageTitle = category
+	data.Data = postData{r.URL.Path, posts}
+	InternalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
 }
 
 // GetMyPosts ...
-func GetMyPosts(w http.ResponseWriter, r *http.Request, user models.User) {
-	posts, err := db.GetPostsByUserID(user.UserID)
-	if internalError(w, r, err) {
+func GetMyPosts(w http.ResponseWriter, r *http.Request, data models.PageData) {
+	posts, err := db.GetPostsByUserID(data.User.UserID)
+	if InternalError(w, r, err) {
 		return
 	}
 
-	data := pageData{"My Posts", user, postData{r.URL.Path, posts}}
-	internalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
+	data.PageTitle = "My Posts"
+	data.Data = postData{r.URL.Path, posts}
+	InternalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
 }
 
 // GetMyLikedPosts ...
-func GetMyLikedPosts(w http.ResponseWriter, r *http.Request, user models.User) {
-	posts, err := db.GetLikedPostsByUserID(user.UserID)
-	if internalError(w, r, err) {
+func GetMyLikedPosts(w http.ResponseWriter, r *http.Request, data models.PageData) {
+	posts, err := db.GetLikedPostsByUserID(data.User.UserID)
+	if InternalError(w, r, err) {
 		return
 	}
 
-	data := pageData{"My Posts", user, postData{r.URL.Path, posts}}
-	internalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
+	data.PageTitle = "My Likes"
+	data.Data = postData{r.URL.Path, posts}
+	InternalError(w, r, tpl.ExecuteTemplate(w, "posts.html", data))
 }

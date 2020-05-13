@@ -15,9 +15,9 @@ import (
 )
 
 // Register route
-func Register(w http.ResponseWriter, r *http.Request) {
+func Register(w http.ResponseWriter, r *http.Request, data models.PageData) {
 
-	data := pageData{"Register", models.User{}, nil}
+	data.PageTitle = "Register"
 
 	if r.Method == http.MethodPost {
 		var newUser models.User
@@ -31,60 +31,60 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		password := r.FormValue("password")
 
 		emailExists, err := db.EmailExists(newUser.Email)
-		if internalError(w, r, err) {
+		if InternalError(w, r, err) {
 			return
 		}
 		usernameExists, err := db.UsernameExists(newUser.Username)
-		if internalError(w, r, err) {
+		if InternalError(w, r, err) {
 			return
 		}
 
 		if newUser.Email == "" {
 			data.Data = "Email must not be empty"
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+			InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
 		} else if !regex.MatchString(newUser.Email) {
 			data.Data = "Invalid email"
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+			InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
 		} else if emailExists {
 			data.Data = "Email already exists"
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+			InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
 		} else if newUser.Username == "" {
 			data.Data = "Username must not be empty"
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+			InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
 		} else if usernameExists {
 			data.Data = "Username exists"
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+			InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
 		} else if !validPassword(password) {
 			data.Data = "Password must have at least 8 characters: 1 upper-case, 1 lower-case, and 1 number."
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+			InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
 		} else if newUser.FirstName == "" {
 			data.Data = "First Name must not be empty"
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+			InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
 		} else if newUser.LastName == "" {
 			data.Data = "Last Name must not be empty"
 			w.WriteHeader(http.StatusUnprocessableEntity)
-			internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+			InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 			return
 		}
 
 		salt := uuid.NewV4()
 
 		hash, err := bcrypt.GenerateFromPassword([]byte(password+salt.String()), bcrypt.MinCost)
-		if internalError(w, r, err) {
+		if InternalError(w, r, err) {
 			return
 		}
 
@@ -92,19 +92,19 @@ func Register(w http.ResponseWriter, r *http.Request) {
 		newUser.Salt = salt.String()
 
 		err = db.CreateUser(&newUser)
-		if internalError(w, r, err) {
+		if InternalError(w, r, err) {
 			return
 		}
 
 		err = sessions.CreateSession(newUser.UserID, w)
-		if internalError(w, r, err) {
+		if InternalError(w, r, err) {
 			return
 		}
 
-		http.Redirect(w, r, "/index", http.StatusFound)
+		http.Redirect(w, r, "/", http.StatusFound)
 
 	} else if r.Method == http.MethodGet {
-		internalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+		InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
 	}
 }
 

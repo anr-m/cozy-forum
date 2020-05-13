@@ -11,12 +11,12 @@ import (
 )
 
 // CreateComment route for creating comments
-func CreateComment(w http.ResponseWriter, r *http.Request, user models.User) {
+func CreateComment(w http.ResponseWriter, r *http.Request, data models.PageData) {
 	text := r.FormValue("text")
 	postid, _ := strconv.Atoi(r.FormValue("postid"))
 
 	if text == "" || postid == 0 {
-		errorHandler(w, r, http.StatusBadRequest, "400 Bad Request")
+		ErrorHandler(w, r, http.StatusBadRequest, "400 Bad Request")
 		return
 	}
 
@@ -24,7 +24,7 @@ func CreateComment(w http.ResponseWriter, r *http.Request, user models.User) {
 
 	newComment := models.Comment{
 		PostID:      postid,
-		Username:    user.Username,
+		Username:    data.User.Username,
 		Text:        text,
 		TimeCreated: now,
 		TimeString:  now.Format("2006-01-02 15:04"),
@@ -32,7 +32,7 @@ func CreateComment(w http.ResponseWriter, r *http.Request, user models.User) {
 
 	err := db.CreateComment(&newComment)
 
-	if internalError(w, r, err) {
+	if InternalError(w, r, err) {
 		return
 	}
 

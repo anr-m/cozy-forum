@@ -21,7 +21,7 @@
         </div>
     </div>
     <p>Author: {{ .Data.Post.Username }}</p>
-    <p>Category: {{ .Data.Post.Category }}</p>
+    <p>Categories: {{ range .Data.Post.Categories }}{{ . }} {{ end }}</p>
     <p>Created: {{ .Data.Post.TimeString }}</p>
 
     {{ if ne (.User.UserID) (0) }}

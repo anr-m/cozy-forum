@@ -9,24 +9,24 @@ import (
 )
 
 // LikeComment route for liking and disliking comments
-func LikeComment(w http.ResponseWriter, r *http.Request, user models.User) {
+func LikeComment(w http.ResponseWriter, r *http.Request, data models.PageData) {
 	var err error
 	commentid, _ := strconv.Atoi(r.FormValue("commentid"))
 	liked := r.FormValue("submit")
 	link := r.FormValue("link")
 
 	if commentid == 0 || !(liked == "like" || liked == "dislike") || link == "" {
-		errorHandler(w, r, http.StatusBadRequest, "400 Bad Request")
+		ErrorHandler(w, r, http.StatusBadRequest, "400 Bad Request")
 		return
 	}
 
 	if liked == "like" {
-		err = db.LikeComment(commentid, user.UserID)
+		err = db.LikeComment(commentid, data.User.UserID)
 	} else {
-		err = db.DislikeComment(commentid, user.UserID)
+		err = db.DislikeComment(commentid, data.User.UserID)
 	}
 
-	if internalError(w, r, err) {
+	if InternalError(w, r, err) {
 		return
 	}
 

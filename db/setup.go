@@ -39,12 +39,11 @@ func SetUp() {
 		postid      INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
 		userid      INTEGER NOT NULL,
 		username    TEXT NOT NULL,
-		category    TEXT NOT NULL,
 		title       TEXT NOT NULL,
 		content     TEXT NOT NULL,
 		timecreated TIMESTAMP NOT NULL,
 		timestring  TEXT NOT NULL,
-		FOREIGN KEY (userid) REFERENCES users(userid)
+		FOREIGN KEY (userid) REFERENCES users(userid),
 		FOREIGN KEY (username) REFERENCES users(username)
 	);`
 
@@ -54,6 +53,52 @@ func SetUp() {
 	_, err = createPostTable.Exec()
 	errorhandle.Fatal(err)
 	log.Println("Posts table created")
+
+	createCategoryTableSQL := `CREATE TABLE IF NOT EXISTS categories (
+		categoryid    INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+		categoryname  TEXT NOT NULL UNIQUE
+	);`
+
+	log.Println("Creating categories table...")
+	createCategoryTable, err := db.Prepare(createCategoryTableSQL)
+	errorhandle.Fatal(err)
+	_, err = createCategoryTable.Exec()
+	errorhandle.Fatal(err)
+	log.Println("Categories table created")
+
+	log.Println("Creating default categories...")
+
+	defaultCategories := []string{
+		"Technology",
+		"Programming",
+		"Gaming",
+		"Music",
+		"Books",
+		"Movies",
+	}
+
+	for _, category := range defaultCategories {
+		err = CreateCategory(category)
+		if err != nil && err != ErrAlreadyExists {
+			errorhandle.Fatal(err)
+		}
+	}
+
+	log.Println("Default categories created...")
+
+	createPostCategoryTableSQL := `CREATE TABLE IF NOT EXISTS postcategories (
+		categoryid  INTEGER NOT NULL,
+		postid      INTEGER NOT NULL,
+		FOREIGN KEY (categoryid) REFERENCES categories(categoryid),
+		FOREIGN KEY (postid) REFERENCES posts(postid)
+	);`
+
+	log.Println("Creating postcategories table...")
+	createPostCategoryTable, err := db.Prepare(createPostCategoryTableSQL)
+	errorhandle.Fatal(err)
+	_, err = createPostCategoryTable.Exec()
+	errorhandle.Fatal(err)
+	log.Println("Postcategories table created")
 
 	createCommentTableSQL := `CREATE TABLE IF NOT EXISTS comments (
 		commentid   INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,

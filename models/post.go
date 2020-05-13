@@ -9,9 +9,9 @@ type Post struct {
 	PostID      int
 	UserID      int
 	Username    string
-	Category    string
 	Title       string
 	Content     string
+	Categories  []string
 	Like        int
 	Dislike     int
 	Liked       bool
