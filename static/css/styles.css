@@ -13,6 +13,10 @@ img{
     display: table;
 }
 
+.comment-img {
+    max-width: 50%;
+}
+
 .row {
     margin-top: 1rem;
     margin-bottom: 1rem;
@@ -41,6 +45,8 @@ img{
 
 .form-control {
     border: 1px solid #aaa;
+    height: auto;
+    max-width: 100%;
 }
 
 /* .footer {

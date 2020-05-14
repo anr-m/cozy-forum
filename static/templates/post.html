@@ -58,7 +58,7 @@
                         <p>{{ .TimeString }}</p>
                         <p>{{ .Text }}</p>
 
-                        <img src="/images/{{ .CommentID }}" alt="">
+                        <img class="comment-img" src="/images/c{{ .CommentID }}" alt="">
 
                         <form action="/likecomment" method="POST">
                             <input type="text" name="commentid" value="{{ .CommentID }}" hidden required>
