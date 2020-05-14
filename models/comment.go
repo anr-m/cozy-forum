@@ -1,13 +1,16 @@
 package models
 
-import "time"
+import (
+	"html/template"
+	"time"
+)
 
 // Comment type for DB
 type Comment struct {
 	CommentID   int
 	PostID      int
 	Username    string
-	Text        string
+	Text        template.HTML
 	Like        int
 	Dislike     int
 	Liked       bool

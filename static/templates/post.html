@@ -29,12 +29,16 @@
         <div class="col-sm-8">
             <div class="card">
                 <div class="card-body">
-                    <form action="/comment" method="POST">
+                    <form action="/comment" method="POST" enctype="multipart/form-data">
                         <div class="form-group">
                             <label for="text">Comment</label>
                             <textarea name="text" class="form-control post-input" rows="4" required></textarea>
                         </div>
                         <input name="postid" value="{{ .Data.Post.PostID }}" hidden required>
+                        <div class="form-group">
+                            <label for="image">Image</label><br>
+                            <input type="file" name="image" accept=".jpg,.JPG,.png,.PNG,.gif,.GIF,.svg,.SVG"><br>
+                        </div>
                         <button type="submit" class="btn btn-dark">Send</button>
                     </form>
                 </div>
@@ -53,7 +57,9 @@
                         <h5>{{ .Username }}</h5>
                         <p>{{ .TimeString }}</p>
                         <p>{{ .Text }}</p>
-    
+
+                        <img src="/images/{{ .CommentID }}" alt="">
+
                         <form action="/likecomment" method="POST">
                             <input type="text" name="commentid" value="{{ .CommentID }}" hidden required>
                             <input type="text" name="link" value="/posts/id/{{ .PostID }}#{{ .CommentID }}" hidden required>
