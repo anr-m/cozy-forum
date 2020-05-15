@@ -38,6 +38,11 @@ func GetPosts(userid int) ([]models.Post, error) {
 				return posts, err
 			}
 		}
+		err = getPostCommentCount(&post)
+		if err != nil {
+			return posts, err
+		}
+
 		posts = append(posts, post)
 	}
 
@@ -83,6 +88,10 @@ func GetPostByID(postid int, userid int) (models.Post, error) {
 			return post, err
 		}
 	}
+	err = getPostCommentCount(&post)
+	if err != nil {
+		return post, err
+	}
 
 	return post, nil
 }
@@ -124,6 +133,11 @@ func GetPostsByCategory(category string, userid int) ([]models.Post, error) {
 				return posts, err
 			}
 		}
+		err = getPostCommentCount(&post)
+		if err != nil {
+			return posts, err
+		}
+
 		posts = append(posts, post)
 	}
 
@@ -163,10 +177,11 @@ func GetPostsByUserID(userid int) ([]models.Post, error) {
 				return posts, err
 			}
 		}
-		err = getPostCategories(&post)
+		err = getPostCommentCount(&post)
 		if err != nil {
 			return posts, err
 		}
+
 		posts = append(posts, post)
 	}
 
@@ -205,10 +220,11 @@ func GetLikedPostsByUserID(userid int) ([]models.Post, error) {
 				return posts, err
 			}
 		}
-		err = getPostCategories(&post)
+		err = getPostCommentCount(&post)
 		if err != nil {
 			return posts, err
 		}
+
 		posts = append(posts, post)
 	}
 

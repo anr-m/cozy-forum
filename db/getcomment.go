@@ -42,3 +42,22 @@ func GetCommentsByPostID(postid int, userid int) ([]models.Comment, error) {
 
 	return comments, nil
 }
+
+func getPostCommentCount(post *models.Post) error {
+	row, err := db.Query(`
+		SELECT COUNT(*)
+		FROM comments
+		WHERE postid = ?
+	`, post.PostID)
+	defer row.Close()
+
+	if err != nil {
+		return err
+	}
+
+	for row.Next() {
+		row.Scan(&post.CommentCount)
+	}
+
+	return nil
+}

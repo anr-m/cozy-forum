@@ -23,7 +23,7 @@
                         <input type="text" name="link" value="{{ $.Data.Link }}#{{ .PostID }}" hidden required>
                         <button type="submit" name="submit" value="like" class="btn btn-{{ if not .Liked }}outline-{{ end }}dark like"><i class="far fa-thumbs-up"></i> {{ .Like }}</button>
                         <button type="submit" name="submit" value="dislike" class="btn btn-{{ if not .Disliked }}outline-{{ end }}dark like"><i class="far fa-thumbs-down"></i> {{ .Dislike }}</button>
-                        <a href="/posts/id/{{ .PostID }}"><button type="button" class="btn btn-outline-dark comment"><i class="far fa-comments"></i> Comments</button></a>
+                        <a href="/posts/id/{{ .PostID }}"><button type="button" class="btn btn-outline-dark comment"><i class="far fa-comments"></i> Comments ({{ .CommentCount }})</button></a>
                     </form>
                 </div>
             </div>
