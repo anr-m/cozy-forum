@@ -11,8 +11,8 @@ func CreateComment(newComment *models.Comment) error {
 	log.Printf("Creating new comment from username %v for post %d...\n", newComment.Username, newComment.PostID)
 	createComment, err := db.Prepare(`
 		INSERT INTO comments
-		(username, postid, text, timecreated, timestring)
-		VALUES (?, ?, ?, ?, ?);
+		(username, postid, text, imageexist, timecreated, timestring)
+		VALUES (?, ?, ?, ?, ?, ?);
 	`)
 
 	if err != nil {
@@ -23,6 +23,7 @@ func CreateComment(newComment *models.Comment) error {
 		newComment.Username,
 		newComment.PostID,
 		newComment.Text,
+		newComment.ImageExist,
 		newComment.TimeCreated,
 		newComment.TimeString,
 	)

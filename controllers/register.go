@@ -105,6 +105,8 @@ func Register(w http.ResponseWriter, r *http.Request, data models.PageData) {
 
 	} else if r.Method == http.MethodGet {
 		InternalError(w, r, tpl.ExecuteTemplate(w, "register.html", data))
+	} else {
+		ErrorHandler(w, r, http.StatusMethodNotAllowed, "405 Method Not Allowed")
 	}
 }
 

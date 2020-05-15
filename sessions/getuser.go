@@ -33,5 +33,7 @@ func GetUser(w http.ResponseWriter, r *http.Request) (models.User, error) {
 	c.MaxAge = 24 * 60 * 60
 	http.SetCookie(w, c)
 
+	DeleteAfter(c)
+
 	return user, nil
 }

@@ -22,7 +22,7 @@ func GetCommentsByPostID(postid int, userid int) ([]models.Comment, error) {
 
 	for row.Next() {
 		var comment models.Comment
-		row.Scan(&comment.CommentID, &comment.PostID, &comment.Username, &comment.Text, &comment.TimeCreated, &comment.TimeString)
+		row.Scan(&comment.CommentID, &comment.PostID, &comment.Username, &comment.Text, &comment.ImageExist, &comment.TimeCreated, &comment.TimeString)
 		err = getCommentLikesAndDislikes(&comment)
 		if err != nil {
 			return comments, err

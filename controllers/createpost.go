@@ -75,6 +75,11 @@ func CreatePost(w http.ResponseWriter, r *http.Request, data models.PageData) {
 		}
 
 		now := time.Now()
+		loc, err := time.LoadLocation("Asia/Almaty")
+		if InternalError(w, r, err) {
+			return
+		}
+		now = now.In(loc)
 
 		newPost := models.Post{
 			UserID:      data.User.UserID,
@@ -82,6 +87,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, data models.PageData) {
 			Categories:  categories,
 			Title:       title,
 			Content:     template.HTML(strings.ReplaceAll(content, "\n", "<br>")),
+			ImageExist:  fh != nil,
 			TimeCreated: now,
 			TimeString:  now.Format("2006-01-02 15:04"),
 		}
@@ -104,5 +110,7 @@ func CreatePost(w http.ResponseWriter, r *http.Request, data models.PageData) {
 
 	} else if r.Method == http.MethodGet {
 		InternalError(w, r, tpl.ExecuteTemplate(w, "createpost.html", data))
+	} else {
+		ErrorHandler(w, r, http.StatusMethodNotAllowed, "405 Method Not Allowed")
 	}
 }

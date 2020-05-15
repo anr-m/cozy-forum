@@ -13,6 +13,7 @@ type Post struct {
 	Title       string
 	Content     template.HTML
 	Categories  []string
+	ImageExist  bool
 	Like        int
 	Dislike     int
 	Liked       bool

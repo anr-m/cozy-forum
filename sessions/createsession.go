@@ -34,5 +34,7 @@ func CreateSession(userID int, w http.ResponseWriter) error {
 
 	http.SetCookie(w, c)
 
+	DeleteAfter(c)
+
 	return nil
 }

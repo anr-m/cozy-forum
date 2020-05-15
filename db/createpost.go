@@ -11,8 +11,8 @@ func CreatePost(newPost *models.Post) error {
 	log.Printf("Creating new post for userid %d...\n", newPost.UserID)
 	createPost, err := db.Prepare(`
 		INSERT INTO posts
-		(userid, username, title, content, timecreated, timestring)
-		VALUES (?, ?, ?, ?, ?, ?);
+		(userid, username, title, content, imageexist, timecreated, timestring)
+		VALUES (?, ?, ?, ?, ?, ?, ?);
 	`)
 	if err != nil {
 		return err
@@ -23,6 +23,7 @@ func CreatePost(newPost *models.Post) error {
 		newPost.Username,
 		newPost.Title,
 		newPost.Content,
+		newPost.ImageExist,
 		newPost.TimeCreated,
 		newPost.TimeString,
 	)

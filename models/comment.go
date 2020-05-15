@@ -11,6 +11,7 @@ type Comment struct {
 	PostID      int
 	Username    string
 	Text        template.HTML
+	ImageExist  bool
 	Like        int
 	Dislike     int
 	Liked       bool

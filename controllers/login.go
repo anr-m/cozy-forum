@@ -93,5 +93,7 @@ func Login(w http.ResponseWriter, r *http.Request, data models.PageData) {
 
 	} else if r.Method == http.MethodGet {
 		InternalError(w, r, tpl.ExecuteTemplate(w, "login.html", data))
+	} else {
+		ErrorHandler(w, r, http.StatusMethodNotAllowed, "405 Method Not Allowed")
 	}
 }

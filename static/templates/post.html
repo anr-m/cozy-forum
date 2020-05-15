@@ -8,7 +8,9 @@
                 <div class="card-body">
                     <h5>{{ .Data.Post.Content }}</h5>
 
-                    <img src="/images/{{ .Data.Post.PostID }}" alt="">
+                    {{ if .Data.Post.ImageExist }}
+                        <img src="/images/{{ .Data.Post.PostID }}" alt="">
+                    {{ end }}
 
                     <form action="/likepost" method="POST">
                         <input type="text" name="postid" value="{{ .Data.Post.PostID }}" hidden required>
@@ -58,8 +60,10 @@
                         <p>{{ .TimeString }}</p>
                         <p>{{ .Text }}</p>
 
-                        <img class="comment-img" src="/images/c{{ .CommentID }}" alt="">
-
+                        {{ if .ImageExist }}
+                            <img class="comment-img" src="/images/c{{ .CommentID }}" alt="">
+                        {{ end }}
+                        
                         <form action="/likecomment" method="POST">
                             <input type="text" name="commentid" value="{{ .CommentID }}" hidden required>
                             <input type="text" name="link" value="/posts/id/{{ .PostID }}#{{ .CommentID }}" hidden required>

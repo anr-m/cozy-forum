@@ -23,7 +23,7 @@ func GetPosts(userid int) ([]models.Post, error) {
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.ImageExist, &post.TimeCreated, &post.TimeString)
 		err = getPostLikesAndDislikes(&post)
 		if err != nil {
 			return posts, err
@@ -61,7 +61,7 @@ func GetPostByID(postid int, userid int) (models.Post, error) {
 	}
 
 	for row.Next() {
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.ImageExist, &post.TimeCreated, &post.TimeString)
 	}
 
 	err = getPostCategories(&post)
@@ -109,7 +109,7 @@ func GetPostsByCategory(category string, userid int) ([]models.Post, error) {
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.ImageExist, &post.TimeCreated, &post.TimeString)
 		err = getPostLikesAndDislikes(&post)
 		if err != nil {
 			return posts, err
@@ -148,7 +148,7 @@ func GetPostsByUserID(userid int) ([]models.Post, error) {
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.ImageExist, &post.TimeCreated, &post.TimeString)
 		err = getPostLikesAndDislikes(&post)
 		if err != nil {
 			return posts, err
@@ -194,7 +194,7 @@ func GetLikedPostsByUserID(userid int) ([]models.Post, error) {
 
 	for row.Next() {
 		var post models.Post
-		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.TimeCreated, &post.TimeString)
+		row.Scan(&post.PostID, &post.UserID, &post.Username, &post.Title, &post.Content, &post.ImageExist, &post.TimeCreated, &post.TimeString)
 		err = getPostLikesAndDislikes(&post)
 		if err != nil {
 			return posts, err
