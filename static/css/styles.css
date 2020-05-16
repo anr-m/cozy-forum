@@ -45,7 +45,9 @@ img{
 
 .form-control {
     border: 1px solid #aaa;
-    height: auto;
+}
+
+.select2 {
     max-width: 100%;
 }
 
