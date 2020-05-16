@@ -52,12 +52,12 @@ func CreatePost(w http.ResponseWriter, r *http.Request, data models.PageData) {
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			InternalError(w, r, tpl.ExecuteTemplate(w, "createpost.html", data))
 			return
-		} else if title == "" {
+		} else if isEmpty(title) {
 			data.Data = "Title must not be empty"
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			InternalError(w, r, tpl.ExecuteTemplate(w, "createpost.html", data))
 			return
-		} else if content == "" {
+		} else if isEmpty(content) {
 			data.Data = "Content must not be empty"
 			w.WriteHeader(http.StatusUnprocessableEntity)
 			InternalError(w, r, tpl.ExecuteTemplate(w, "createpost.html", data))
@@ -113,4 +113,15 @@ func CreatePost(w http.ResponseWriter, r *http.Request, data models.PageData) {
 	} else {
 		ErrorHandler(w, r, http.StatusMethodNotAllowed, "405 Method Not Allowed")
 	}
+}
+
+func isEmpty(text string) bool {
+
+	for _, v := range text {
+		if !(v <= 32) {
+			return false
+		}
+	}
+
+	return true
 }

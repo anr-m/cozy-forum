@@ -33,7 +33,7 @@ func CreateComment(w http.ResponseWriter, r *http.Request, data models.PageData)
 		if postid == 0 {
 			ErrorHandler(w, r, http.StatusBadRequest, "400 Bad Request")
 			return
-		} else if text == "" {
+		} else if isEmpty(text) {
 			ErrorHandler(w, r, http.StatusUnprocessableEntity, "Text must not be empty")
 			return
 		} else if fh != nil {
